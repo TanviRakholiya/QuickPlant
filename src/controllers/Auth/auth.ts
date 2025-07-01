@@ -13,7 +13,7 @@ import { config } from '../../../config'
 // import { sendSMS } from '../../helper/aws_sns' // Fixed import path for AWS SNS SMS
 
 const ObjectId = require('mongoose').Types.ObjectId
-const jwt_token_secret = config.JWT_TOKEN_SECRET
+const jwt_token_secret = config.JWT_TOKEN_SECRET 
 
 const secretKey = process.env.JWT_TOKEN_SECRET;
 
