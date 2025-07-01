@@ -6,7 +6,7 @@ import { userModel } from '../../database'
 import { apiResponse } from '../../common'
 import { 
   email_verification_mail, 
-  otp_verification_sms, // Commented out Twilio SMS
+  otp_verification_sms, 
   responseMessage,
 } from '../../helper'
 import { config } from '../../../config'
