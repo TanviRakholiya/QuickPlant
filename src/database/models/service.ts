@@ -11,6 +11,6 @@ const serviceSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true }, // Service active status
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Creator reference
   updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } // Updater reference
-}, { timestamps: true });
+}, { timestamps: true });    
 
 export const Service = mongoose.model('Service', serviceSchema); 

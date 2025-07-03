@@ -10,9 +10,9 @@ import sharp from 'sharp'
 import { config } from '../../config'
 
 const s3 = new AWS.S3({
-    accessKeyId: config.AWS_KEY_ID,
+    accessKeyId: config.AWS_ACCESS_KEY_ID,
     secretAccessKey: config.AWS_SECRET_ACCESS_KEY,
-    region: config.REGION
+    region: config.AWS_REGION
 })
 const bucket_name = config.BUCKET_NAME
 const bucket_url = config.BUCKET_URL

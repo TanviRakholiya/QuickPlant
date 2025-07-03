@@ -64,5 +64,8 @@ export const serviceUpload = multer({ storage: makeStorage('service', 'service')
 // For feature icon images
 export const featureIconUpload = multer({ storage: makeStorage('feature-icon', 'featureicon') });
 
+// For review photos
+export const reviewUpload = multer({ storage: makeStorage('review', 'review') });
+
 
 

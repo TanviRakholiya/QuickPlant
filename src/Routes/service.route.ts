@@ -1,4 +1,5 @@
 import express from 'express';
+import { authenticate } from '../middleware/authenticate';
 import {
   createService,
   getAllServices,
@@ -8,11 +9,13 @@ import {
 } from '../controllers/service';
 
 import { serviceUpload } from '../middleware/uploadFile';
+import { validate } from '../middleware/validate';
+import { serviceValidation } from '../helper/validation';
 
 const serviceRouter = express.Router();
 
 // Create a new service
-serviceRouter.post('/', serviceUpload.single('image'), createService);
+serviceRouter.post('/', authenticate, validate(serviceValidation.create), serviceUpload.single('image'), createService);
 
 // Get all active services
 serviceRouter.get('/', getAllServices);
@@ -21,10 +24,10 @@ serviceRouter.get('/', getAllServices);
 serviceRouter.get('/:id', getServiceById);
 
 // Update a service
-serviceRouter.put('/:id', serviceUpload.single('image'), updateService);
+serviceRouter.put('/:id', authenticate, validate(serviceValidation.update), serviceUpload.single('image'), updateService);
 
 // Soft delete (deactivate) a service
-serviceRouter.patch('/:id/deactivate', deleteService);
+serviceRouter.patch('/:id/deactivate', authenticate, validate(serviceValidation.delete), deleteService);
 
 
 export default serviceRouter; 

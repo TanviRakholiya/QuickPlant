@@ -18,7 +18,8 @@ const productSchema = new mongoose.Schema({
 
 
   ],
-  isDeleted: { type: Boolean, default: false } // Soft delete flag
+  isDeleted: { type: Boolean, default: false }, // Soft delete flag
+  isFeatured: { type: Boolean, default: false } // Featured product flag
 }, { timestamps: true });
 
 export const Product = mongoose.model('Product', productSchema); 

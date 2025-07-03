@@ -170,8 +170,6 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-console.log("hello")
-
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, mobileNo, password } = req.body;

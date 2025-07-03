@@ -1,0 +1,128 @@
+{
+  "info": {
+    "_postman_id": "quick-plant-collection-2025",
+    "name": "Quick Plant API Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        { "name": "Send OTP", "request": { "method": "POST", "header": [], "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@example.com\"\n}" }, "url": { "raw": "/auth/sent-otp", "host": ["{{baseUrl}}"], "path": ["auth", "sent-otp"] } } },
+        { "name": "OTP Verification", "request": { "method": "POST", "header": [], "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\"\n}" }, "url": { "raw": "/auth/otp-verification", "host": ["{{baseUrl}}"], "path": ["auth", "otp-verification"] } } },
+        { "name": "Register", "request": { "method": "POST", "header": [], "body": { "mode": "formdata", "formdata": [ { "key": "photo", "type": "file" }, { "key": "email", "value": "user@example.com", "type": "text" }, { "key": "password", "value": "password", "type": "text" } ] }, "url": { "raw": "/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] } } },
+        { "name": "Login", "request": { "method": "POST", "header": [], "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password\"\n}" }, "url": { "raw": "/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] } } },
+        { "name": "Forgot Password", "request": { "method": "POST", "header": [], "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@example.com\"\n}" }, "url": { "raw": "/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["auth", "forgot-password"] } } },
+        { "name": "Reset Password", "request": { "method": "POST", "header": [], "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"newpassword\"\n}" }, "url": { "raw": "/auth/reset-password", "host": ["{{baseUrl}}"], "path": ["auth", "reset-password"] } } },
+        { "name": "Admin Signup", "request": { "method": "POST", "header": [], "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"adminpass\"\n}" }, "url": { "raw": "/auth/admin/signup", "host": ["{{baseUrl}}"], "path": ["auth", "admin", "signup"] } } },
+        { "name": "Admin Login", "request": { "method": "POST", "header": [], "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"adminpass\"\n}" }, "url": { "raw": "/auth/admin/login", "host": ["{{baseUrl}}"], "path": ["auth", "admin", "login"] } } }
+      ]
+    },
+    {
+      "name": "Category",
+      "item": [
+        { "name": "Create Category", "request": { "method": "POST", "header": [], "body": { "mode": "formdata", "formdata": [ { "key": "image", "type": "file" }, { "key": "name", "value": "Indoor", "type": "text" }, { "key": "type", "value": "plant", "type": "text" } ] }, "url": { "raw": "/category", "host": ["{{baseUrl}}"], "path": ["category"] } } },
+        { "name": "Get All Categories", "request": { "method": "GET", "header": [], "url": { "raw": "/category", "host": ["{{baseUrl}}"], "path": ["category"] } } },
+        { "name": "Get Category By ID", "request": { "method": "GET", "header": [], "url": { "raw": "/category/id", "host": ["{{baseUrl}}"], "path": ["category", "id"] } } },
+        { "name": "Update Category", "request": { "method": "PUT", "header": [], "body": { "mode": "formdata", "formdata": [ { "key": "image", "type": "file" }, { "key": "name", "value": "Indoor", "type": "text" }, { "key": "type", "value": "plant", "type": "text" } ] }, "url": { "raw": "/category/:id", "host": ["{{baseUrl}}"], "path": ["category", ":id"] } } },
+        { "name": "Delete Category", "request": { "method": "DELETE", "header": [], "url": { "raw": "/category/:id", "host": ["{{baseUrl}}"], "path": ["category", ":id"] } } }
+      ]
+    },
+    {
+      "name": "FAQ",
+      "item": [
+        { "name": "Create FAQ", "request": { "method": "POST", "header": [], "body": { "mode": "raw", "raw": "{\n  \"question\": \"What is Quick Plant?\",\n  \"answer\": \"A plant delivery service.\"\n}" }, "url": { "raw": "/faqs", "host": ["{{baseUrl}}"], "path": ["faqs"] } } },
+        { "name": "Get All FAQs", "request": { "method": "GET", "header": [], "url": { "raw": "/faqs", "host": ["{{baseUrl}}"], "path": ["faqs"] } } },
+        { "name": "Update FAQ", "request": { "method": "PUT", "header": [], "body": { "mode": "raw", "raw": "{\n  \"question\": \"Updated?\",\n  \"answer\": \"Yes!\"\n}" }, "url": { "raw": "/faqs/:id", "host": ["{{baseUrl}}"], "path": ["faqs", ":id"] } } },
+        { "name": "Delete FAQ", "request": { "method": "DELETE", "header": [], "url": { "raw": "/faqs/:id", "host": ["{{baseUrl}}"], "path": ["faqs", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Feature",
+      "item": [
+        { "name": "Create Feature", "request": { "method": "POST", "header": [], "body": { "mode": "formdata", "formdata": [ { "key": "image", "type": "file" }, { "key": "title", "value": "Feature Title", "type": "text" } ] }, "url": { "raw": "/feature", "host": ["{{baseUrl}}"], "path": ["feature"] } } },
+        { "name": "Get Features", "request": { "method": "GET", "header": [], "url": { "raw": "/feature", "host": ["{{baseUrl}}"], "path": ["feature"] } } },
+        { "name": "Update Feature", "request": { "method": "PUT", "header": [], "body": { "mode": "formdata", "formdata": [ { "key": "image", "type": "file" }, { "key": "title", "value": "Feature Title", "type": "text" } ] }, "url": { "raw": "/feature/:id", "host": ["{{baseUrl}}"], "path": ["feature", ":id"] } } },
+        { "name": "Delete Feature", "request": { "method": "DELETE", "header": [], "url": { "raw": "/feature/:id", "host": ["{{baseUrl}}"], "path": ["feature", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Plan",
+      "item": [
+        { "name": "Create Plan", "request": { "method": "POST", "header": [], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Basic Plan\"\n}" }, "url": { "raw": "/plans", "host": ["{{baseUrl}}"], "path": ["plans"] } } },
+        { "name": "Get All Plans", "request": { "method": "GET", "header": [], "url": { "raw": "/plans", "host": ["{{baseUrl}}"], "path": ["plans"] } } },
+        { "name": "Get Plan By ID", "request": { "method": "GET", "header": [], "url": { "raw": "/plans/:id", "host": ["{{baseUrl}}"], "path": ["plans", ":id"] } } },
+        { "name": "Update Plan", "request": { "method": "PUT", "header": [], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Plan\"\n}" }, "url": { "raw": "/plans/:id", "host": ["{{baseUrl}}"], "path": ["plans", ":id"] } } },
+        { "name": "Deactivate Plan", "request": { "method": "PATCH", "header": [], "url": { "raw": "/plans/:id/deactivate", "host": ["{{baseUrl}}"], "path": ["plans", ":id", "deactivate"] } } },
+        { "name": "Delete Plan", "request": { "method": "DELETE", "header": [], "url": { "raw": "/plans/:id", "host": ["{{baseUrl}}"], "path": ["plans", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Plant Collection",
+      "item": [
+        { "name": "Admin Upload Plant Image", "request": { "method": "POST", "header": [], "body": { "mode": "formdata", "formdata": [ { "key": "image", "type": "file" }, { "key": "title", "value": "Plant Title", "type": "text" } ] }, "url": { "raw": "/plant-collection/admin/plant-collection", "host": ["{{baseUrl}}"], "path": ["plant-collection", "admin", "plant-collection"] } } },
+        { "name": "Get Plant Collection", "request": { "method": "GET", "header": [], "url": { "raw": "/plant-collection/plant-collection", "host": ["{{baseUrl}}"], "path": ["plant-collection", "plant-collection"] } } }
+      ]
+    },
+    {
+      "name": "Product",
+      "item": [
+        { "name": "Create Product", "request": { "method": "POST", "header": [], "body": { "mode": "formdata", "formdata": [
+          { "key": "images", "type": "file" },
+          { "key": "name", "value": "Product Name", "type": "text" },
+          { "key": "description", "value": "Product description", "type": "text" },
+          { "key": "highlights", "value": "[\"Highlight 1\", \"Highlight 2\"]", "type": "text" },
+          { "key": "category", "value": "categoryId", "type": "text" },
+          { "key": "store", "value": "QuickPlant", "type": "text" },
+          { "key": "price", "value": "100", "type": "text" },
+          { "key": "originalPrice", "value": "120", "type": "text" },
+          { "key": "discountPercent", "value": "20", "type": "text" },
+          { "key": "sizes", "value": "[{\"label\":\"Small\",\"price\":50},{\"label\":\"Large\",\"price\":100}]", "type": "text" },
+          { "key": "isDeleted", "value": "false", "type": "text" },
+          { "key": "isFeatured", "value": "false", "type": "text" }
+        ] }, "url": { "raw": "/product", "host": ["{{baseUrl}}"], "path": ["product"] } } },
+        { "name": "Get All Products", "request": { "method": "GET", "header": [], "url": { "raw": "/product/all", "host": ["{{baseUrl}}"], "path": ["product", "all"] } } },
+        { "name": "Get Product By ID", "request": { "method": "GET", "header": [], "url": { "raw": "/product/:id", "host": ["{{baseUrl}}"], "path": ["product", ":id"] } } },
+        { "name": "Update Product", "request": { "method": "PUT", "header": [], "body": { "mode": "formdata", "formdata": [ { "key": "images", "type": "file" }, { "key": "name", "value": "Product Name", "type": "text" }, { "key": "price", "value": "100", "type": "text" }, { "key": "category", "value": "categoryId", "type": "text" } ] }, "url": { "raw": "/product/:id", "host": ["{{baseUrl}}"], "path": ["product", ":id"] } } },
+        { "name": "Delete Product", "request": { "method": "DELETE", "header": [], "url": { "raw": "/product/:id", "host": ["{{baseUrl}}"], "path": ["product", ":id"] } } },
+        { "name": "Best Seller Products", "request": { "method": "GET", "header": [], "url": { "raw": "/product/bestsellers", "host": ["{{baseUrl}}"], "path": ["product", "bestsellers"] } } },
+        { "name": "Feature Product (Admin)", "request": { "method": "PUT", "header": [], "body": { "mode": "raw", "raw": "{\n  \"feature\": true\n}" }, "url": { "raw": "/product/:id/feature", "host": ["{{baseUrl}}"], "path": ["product", ":id", "feature"] } } },
+        { "name": "Get Featured Products", "request": { "method": "GET", "header": [], "url": { "raw": "/product/featured", "host": ["{{baseUrl}}"], "path": ["product", "featured"] } } }
+      ]
+    },
+    {
+      "name": "Review",
+      "item": [
+        { "name": "Create Review", "request": { "method": "POST", "header": [], "body": { "mode": "formdata", "formdata": [
+          { "key": "photo", "type": "file" },
+          { "key": "name", "value": "User Name", "type": "text" },
+          { "key": "email", "value": "user@example.com", "type": "text" },
+          { "key": "productOrService", "value": "productIdOrServiceId", "type": "text" },
+          { "key": "rating", "value": "5", "type": "text" },
+          { "key": "reviewText", "value": "Great!", "type": "text" },
+          { "key": "userType", "value": "USER", "type": "text" },
+          { "key": "createdBy", "value": "userObjectId", "type": "text" },
+          { "key": "updatedBy", "value": "userObjectId", "type": "text" },
+          { "key": "isDeleted", "value": "false", "type": "text" }
+        ] }, "url": { "raw": "/review", "host": ["{{baseUrl}}"], "path": ["review"] } } },
+        { "name": "Get All Reviews", "request": { "method": "GET", "header": [], "url": { "raw": "/review", "host": ["{{baseUrl}}"], "path": ["review"] } } },
+        { "name": "Get Review By ID", "request": { "method": "GET", "header": [], "url": { "raw": "/review/:id", "host": ["{{baseUrl}}"], "path": ["review", ":id"] } } },
+        { "name": "Update Review", "request": { "method": "PUT", "header": [], "body": { "mode": "formdata", "formdata": [ { "key": "photo", "type": "file" }, { "key": "reviewText", "value": "Updated!", "type": "text" } ] }, "url": { "raw": "/review/:id", "host": ["{{baseUrl}}"], "path": ["review", ":id"] } } },
+        { "name": "Delete Review", "request": { "method": "DELETE", "header": [], "url": { "raw": "/review/:id", "host": ["{{baseUrl}}"], "path": ["review", ":id"] } } }
+      ]
+    },
+    {
+      "name": "Service",
+      "item": [
+        { "name": "Create Service", "request": { "method": "POST", "header": [], "body": { "mode": "formdata", "formdata": [ { "key": "image", "type": "file" }, { "key": "name", "value": "Service Name", "type": "text" } ] }, "url": { "raw": "/services", "host": ["{{baseUrl}}"], "path": ["services"] } } },
+        { "name": "Get All Services", "request": { "method": "GET", "header": [], "url": { "raw": "/services", "host": ["{{baseUrl}}"], "path": ["services"] } } },
+        { "name": "Get Service By ID", "request": { "method": "GET", "header": [], "url": { "raw": "/services/:id", "host": ["{{baseUrl}}"], "path": ["services", ":id"] } } },
+        { "name": "Update Service", "request": { "method": "PUT", "header": [], "body": { "mode": "formdata", "formdata": [ { "key": "image", "type": "file" }, { "key": "name", "value": "Service Name", "type": "text" } ] }, "url": { "raw": "/services/:id", "host": ["{{baseUrl}}"], "path": ["services", ":id"] } } },
+        { "name": "Deactivate Service", "request": { "method": "PATCH", "header": [], "url": { "raw": "/services/:id/deactivate", "host": ["{{baseUrl}}"], "path": ["services", ":id", "deactivate"] } } }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "localhost:3000" }
+  ]
+}

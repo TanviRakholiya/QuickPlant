@@ -1,4 +1,5 @@
 import express from 'express';
+import { authenticate } from '../middleware/authenticate';
 import {
   createFeature,
   getFeatures,
@@ -6,12 +7,14 @@ import {
   deleteFeature
 } from '../controllers/feature';
 import { featureIconUpload } from '../middleware/uploadFile';
+import { validate } from '../middleware/validate';
+import { featureValidation } from '../helper/validation';
 
 const featurerouter = express.Router();
 
-featurerouter.post('/', featureIconUpload.single('image'), createFeature);
 featurerouter.get('/', getFeatures);
-featurerouter.put('/', featureIconUpload.single('image'), updateFeature);
-featurerouter.delete('/', deleteFeature);
+featurerouter.post('/', authenticate, validate(featureValidation.create), featureIconUpload.single('image'), createFeature);
+featurerouter.put('/:id', authenticate, validate(featureValidation.update), featureIconUpload.single('image'), updateFeature);
+featurerouter.delete('/:id', authenticate, validate(featureValidation.delete), deleteFeature);
 
 export default featurerouter;   
