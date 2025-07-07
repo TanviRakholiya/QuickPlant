@@ -5,10 +5,12 @@ const userSchema: any = new mongoose.Schema({
         type: String
     },
     email: {
-        type: String
+        type: String,
+        required:false
     },
     mobileNo: {
-        type: String
+        type: String,
+        required:false
     },
     password: {
         type: String
@@ -43,7 +45,8 @@ const userSchema: any = new mongoose.Schema({
         ref: "Category"
     },
     image: {
-        type: String
+        type: String,
+        required: false
     },
     userType: {
         type: String,

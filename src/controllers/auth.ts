@@ -2,18 +2,18 @@
 import bcryptjs from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { Request, Response } from 'express'
-import { userModel } from '../../database'
-import { apiResponse } from '../../common'
-import { 
-  email_verification_mail, 
-  otp_verification_sms, // Commented out Twilio SMS
-  responseMessage,
-} from '../../helper'
-import { config } from '../../../config'
-// import { sendSMS } from '../../helper/aws_sns' // Fixed import path for AWS SNS SMS
+import { userModel } from '../database'
+import { apiResponse } from '../common'
+import {
+    email_verification_mail,
+    otp_verification_sms, // Commented out Twilio SMS
+    responseMessage,
+} from '../helper'
+import { config } from '../../config'
+import { sendSMS } from '../helper/aws_sns'
 
 const ObjectId = require('mongoose').Types.ObjectId
-const jwt_token_secret = config.JWT_TOKEN_SECRET 
+const jwt_token_secret = config.JWT_TOKEN_SECRET
 
 const secretKey = process.env.JWT_TOKEN_SECRET;
 
@@ -26,11 +26,16 @@ export const otpSent = async (req: Request, res: Response) => {
             return res.status(400).json(new apiResponse(400, "Missing required fields", {}, {}));
         }
 
-        const otp = Math.floor(100000 + Math.random() * 900000); 
+        const otp = Math.floor(100000 + Math.random() * 900000);
         const otpExpireTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
 
-        let user = await userModel.findOne({ $or: [{ email }, { mobileNo }] });
-
+        // Check for existing user by email or mobileNo, depending on which is provided
+        let user;
+        if (email) {
+            user = await userModel.findOne({ email });
+        } else if (mobileNo) {
+            user = await userModel.findOne({ mobileNo });
+        }
         if (user) {
             if (user?.isVerified && user?.password) {
                 return res.status(409).json(new apiResponse(409, responseMessage?.alreadyRegister, {}, {}));
@@ -41,21 +46,23 @@ export const otpSent = async (req: Request, res: Response) => {
             user.userType = userType || user.userType;
             await user.save();
         } else {
-            user = await userModel.create({
+            // Only include email or mobileNo if present
+            const userData: any = {
                 fullName,
-                email,
-                mobileNo,
                 userType,
                 otp,
                 otpExpireTime,
-                isVerified: false
-            });
+                isVerified: false,
+            };
+            if (email) userData.email = email;
+            if (mobileNo) userData.mobileNo = mobileNo;
+
+            user = await userModel.create(userData);
         }
 
         let result;
         if (mobileNo) {
-            result = await otp_verification_sms({ mobileNo, fullName }, otp); // Commented out Twilio SMS
-            // result = await sendSMS('91', mobileNo, `Hello ${fullName || 'User'}, your Quick Plant OTP is: ${otp}. It expires in 10 minutes.`); // Using AWS SNS
+            result = await sendSMS('91', mobileNo, `Hello ${fullName || 'User'}, your Quick Plant OTP is: ${otp}. It expires in 10 minutes.`);
         } else if (email) {
             result = await email_verification_mail({ email, fullName }, otp);
         }
@@ -73,13 +80,14 @@ export const otpSent = async (req: Request, res: Response) => {
             isVerified: user.isVerified
         };
         const token = jwt.sign(payload, secretKey, { expiresIn: "10m" });
+        console.log(token);
 
         return res.status(200).json(new apiResponse(200, responseMessage?.otpSentSuccessfully, { token }, {}));
     } catch (error) {
         console.error('OTP sent error:', error);
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
-};
+}; 
 
 export const otp_verification = async (req: Request, res: Response) => {
     try {
@@ -90,7 +98,13 @@ export const otp_verification = async (req: Request, res: Response) => {
         const decoded: any = jwt.verify(token, secretKey);
         const { email, mobileNo } = decoded;
 
-        const user = await userModel.findOne({ $or: [{ email }, { mobileNo }] });
+        // Check for user by email if present, otherwise by mobileNo
+        let user;
+        if (email) {
+            user = await userModel.findOne({ email });
+        } else if (mobileNo) {
+            user = await userModel.findOne({ mobileNo });
+        }
         if (!user) return res.status(404).json(new apiResponse(404, responseMessage?.userNotFound, {}, {}));
 
         if (user?.isVerified && user?.password) {
@@ -114,7 +128,7 @@ export const otp_verification = async (req: Request, res: Response) => {
             id: user._id,
             userType: user.userType
         };
-       
+
         const verifiedToken = jwt.sign(payload, secretKey);
         return res.status(200).json(new apiResponse(200, responseMessage?.OTPverified, { token: verifiedToken }, {}));
     } catch (error) {
@@ -123,81 +137,84 @@ export const otp_verification = async (req: Request, res: Response) => {
 };
 
 export const register = async (req: Request, res: Response) => {
-  try {
-    const { id, userType } = req.user;
+    try {
+        const { id, userType } = req.user;
 
-    const existingUser = await userModel.findById(id);
-    if (!existingUser || !existingUser.isVerified) {
-      return res.status(403).json(new apiResponse(403, "OTP verification required", {}, {}));
+        const existingUser = await userModel.findById(id);
+        if (!existingUser || !existingUser.isVerified) {
+            return res.status(403).json(new apiResponse(403, "OTP verification required", {}, {}));
+        }
+
+        const uploadedPhoto = req.file ? req.file.filename : null;
+        const hashedPassword = await bcryptjs.hash(req.body.password, 10);
+
+        // Robustly handle typeofPlant as array in controller
+        if (req.body.typeofPlant && typeof req.body.typeofPlant === 'string') {
+            try {
+                const parsed = JSON.parse(req.body.typeofPlant);
+                req.body.typeofPlant = Array.isArray(parsed) ? parsed : [parsed];
+            } catch {
+                req.body.typeofPlant = [req.body.typeofPlant];
+            }
+        }
+        const updateData = {
+            ...req.body,
+            password: hashedPassword,
+            createdBy: existingUser._id,
+            updatedBy: existingUser._id,
+            isVerified: true
+        };
+
+        // Save uploaded photo to 'image' field as required by schema
+        if (uploadedPhoto) {
+            updateData.image = uploadedPhoto;
+        }
+
+        existingUser.set(updateData);
+        await existingUser.save();
+
+        const payload = { id: existingUser._id, userType };
+        const finalToken = jwt.sign(payload, secretKey);
+
+        return res.status(200).json(
+            new apiResponse(200, responseMessage?.registerSuccess, { token: finalToken, user: existingUser }, {})
+        );
+    } catch (error) {
+        console.error('Register error:', error);
+        return res.status(500).json(
+            new apiResponse(500, responseMessage.internalServerError, {}, error)
+        );
     }
-
-    const uploadedPhoto = req.file ? req.file.filename : null;
-    const hashedPassword = await bcryptjs.hash(req.body.password, 10);
-
-    // Remove typeofPlant if it's empty or not provided
-    const { typeofPlant, ...otherFields } = req.body;
-    
-    const updateData = {
-      ...otherFields,
-      password: hashedPassword,
-      createdBy: existingUser._id,
-      updatedBy: existingUser._id,
-      isVerified: true
-    };
-
-    if (uploadedPhoto) {
-      updateData.photo = uploadedPhoto;
-    }
-
-    if (typeofPlant && Array.isArray(typeofPlant) && typeofPlant.length > 0) {
-      updateData.typeofPlant = typeofPlant;
-    }
-
-    existingUser.set(updateData);
-    await existingUser.save();
-
-    const payload = { id: existingUser._id, userType };
-    const finalToken = jwt.sign(payload, secretKey);
-
-    return res.status(200).json(
-      new apiResponse(200, responseMessage?.registerSuccess, { token: finalToken, user: existingUser }, {})
-    );
-  } catch (error) {
-    console.error('Register error:', error);
-    return res.status(500).json(
-      new apiResponse(500, responseMessage.internalServerError, {}, error)
-    );
-  }
 };
 
 export const login = async (req: Request, res: Response) => {
-  try {
-    const { email, mobileNo, password } = req.body;
+    try {
+        const { email, mobileNo, password } = req.body;
 
-    const user = await userModel.findOne({
-      $or: [{ email }, { mobileNo }]
-    });
+        const user = await userModel.findOne({
+            $or: [{ email }, { mobileNo }]
+        });
 
-    if (!user || !user.isVerified || !user.password) {
-      return res.status(404).json(new apiResponse(404, responseMessage?.userNotFound, {}, {}));
+        if (!user || !user.isVerified || !user.password) {
+            return res.status(404).json(new apiResponse(404, responseMessage?.userNotFound, {}, {}));
+        }
+
+        const isMatch = await bcryptjs.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json(new apiResponse(401, responseMessage?.invalidpassword, {}, {}));
+        }
+
+        const payload = {
+            id: user._id,
+            userType: user.userType
+        };
+
+        const token = jwt.sign(payload, secretKey);
+
+        return res.status(200).json(new apiResponse(200, responseMessage.loginSuccess, { token, user }, {}));
+    } catch (error) {
+        return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
-
-    const isMatch = await bcryptjs.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json(new apiResponse(401, responseMessage?.invalidpassword, {}, {}));
-    }
-
-    const payload = {
-      id: user._id,
-      userType: user.userType
-    };
-
-    const token = jwt.sign(payload, secretKey);
-
-    return res.status(200).json(new apiResponse(200, responseMessage.loginSuccess, { token, user }, {}));
-  } catch (error) {
-    return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
-  }
 };
 
 export const forgot_password = async (req: Request, res: Response) => {
@@ -225,13 +242,13 @@ export const forgot_password = async (req: Request, res: Response) => {
         // Send password reset email
         try {
             const emailResult = await email_verification_mail({ email: user.email, fullName: user.fullName }, otp);
-            
+
             // Update user with OTP
             await userModel.findOneAndUpdate(
                 { _id: user._id },
                 { otp, otpExpireTime }
             );
-            
+
             return res.status(200).json(new apiResponse(200, emailResult, {}, {}));
         } catch (emailError) {
             console.error('Password reset email failed:', emailError);
@@ -302,6 +319,7 @@ export const adminSignUp = async (req: Request, res: Response) => {
         }
 
         if (isAlready?.isBlock === true) {
+
             return res.status(403).json(new apiResponse(403, responseMessage?.accountBlock, {}, {}));
         }
 
@@ -320,7 +338,7 @@ export const adminSignUp = async (req: Request, res: Response) => {
         };
 
         let response = await new userModel(userData).save();
-        
+
         // Generate OTP for email verification
         const otp = Math.floor(100000 + Math.random() * 900000);
         const otpExpireTime = new Date(Date.now() + 10 * 60 * 1000);
@@ -328,13 +346,13 @@ export const adminSignUp = async (req: Request, res: Response) => {
         // Send verification email
         try {
             const emailResult = await email_verification_mail({ email: response.email, fullName: response.fullName }, otp);
-            
+
             // Update user with OTP
             await userModel.findOneAndUpdate(
                 { _id: response._id },
                 { otp, otpExpireTime }
             );
-            
+
             const userResponse = {
                 userType: response?.userType,
                 isEmailVerified: response?.isEmailVerified,
@@ -342,7 +360,7 @@ export const adminSignUp = async (req: Request, res: Response) => {
                 email: response?.email,
                 fullName: response?.fullName,
             };
-            
+
             return res.status(200).json(new apiResponse(200, emailResult, userResponse, {}));
         } catch (emailError) {
             console.error('Admin signup email failed:', emailError);
@@ -363,7 +381,7 @@ export const adminLogin = async (req: Request, res: Response) => {
         }
 
         const response = await userModel.findOneAndUpdate(
-            { email, isActive: true, isEmailVerified: true }, 
+            { email, isActive: true, isEmailVerified: true },
             { isLoggedIn: true }
         ).select('-__v -createdAt -updatedAt');
 
@@ -401,3 +419,4 @@ export const adminLogin = async (req: Request, res: Response) => {
         return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, error));
     }
 };
+

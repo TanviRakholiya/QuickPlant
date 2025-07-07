@@ -19,7 +19,11 @@ const productSchema = new mongoose.Schema({
 
   ],
   isDeleted: { type: Boolean, default: false }, // Soft delete flag
-  isFeatured: { type: Boolean, default: false } // Featured product flag
+  isFeatured: { type: Boolean, default: false }, // Featured product flag
+  uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } , 
+  createdBy:{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // User who created the product
+  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } // User who last updated the product
+  
 }, { timestamps: true });
 
 export const Product = mongoose.model('Product', productSchema); 

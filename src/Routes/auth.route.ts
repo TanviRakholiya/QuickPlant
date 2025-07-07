@@ -5,21 +5,21 @@ import {
   otpSent,
   otp_verification,
   register,
-  login,
+  login,  
   forgot_password,
   reset_password,
   adminSignUp,
   adminLogin
-} from '../controllers/Auth/auth'
+} from '../controllers/auth'
 import { authenticate } from '../middleware/authenticate';
-import upload from '../middleware/uploadFile';
+import upload from '../middleware/uploadFile';  
 import { authUpload } from '../middleware/uploadFile';
 
 const authrouter = Router();
 
 authrouter.post('/sent-otp', validate(authValidation.otpSent), otpSent);
 authrouter.post('/otp-verification', validate(authValidation.otpVerification), otp_verification);
-authrouter.post('/register', authenticate, authUpload.single('photo'), validate(authValidation.register), register);
+authrouter.post('/register', authenticate, authUpload.single('image'), validate(authValidation.register), register);
 authrouter.post('/login', validate(authValidation.login), login);
 authrouter.post('/forgot-password', validate(authValidation.forgotPassword), forgot_password);
 authrouter.post('/reset-password', validate(authValidation.resetPassword), reset_password);

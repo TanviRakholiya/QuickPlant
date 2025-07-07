@@ -14,7 +14,10 @@ export const createProduct = async (req: Request, res: Response) => {
       images,
       sizes: req.body.sizes ? JSON.parse(req.body.sizes) : [],
       highlights: req.body.highlights ? JSON.parse(req.body.highlights) : [],
-      features: req.body.features ? JSON.parse(req.body.features) : []
+      features: req.body.features ? JSON.parse(req.body.features) : [],
+      uploadedBy: req.user && req.user.id ? req.user.id : undefined,
+      createdBy: req.user && req.user.id ? req.user.id : undefined,
+      updatedBy: req.user && req.user.id ? req.user.id : undefined
     });
 
     await product.save();
@@ -37,6 +40,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
       maxPrice,
       sortBy = 'createdAt',
       sortOrder = 'desc',
+      userType
     } = req.body;
 
     const query: any = { isDeleted: false };
@@ -59,12 +63,21 @@ export const getAllProducts = async (req: Request, res: Response) => {
     const sort: any = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    const products = await Product.find(query)
+    let productsQuery = Product.find(query)
       .populate('category', 'name image')
+      .populate({
+        path: 'uploadedBy',
+        select: 'fullName email userType'
+      })
       .limit(Number(limit))
       .skip((Number(page) - 1) * Number(limit))
       .sort(sort);
 
+    if (userType) {
+      productsQuery = productsQuery.where('uploadedBy.userType').equals(userType);
+    }
+
+    const products = await productsQuery;
     const total = await Product.countDocuments(query);
 
     return res.status(200).json(new apiResponse(200, 'Products fetched successfully', {
@@ -115,6 +128,9 @@ export const updateProduct = async (req: Request, res: Response) => {
       updateData,
       { new: true }
     );
+    if (req.user && req.user.id) {
+      updateData.updatedBy = req.user.id;
+    }
 
     if (!product) {
       return res.status(404).json(new apiResponse(404, 'Product not found', {}, {}));
@@ -145,6 +161,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
   }
 };
 
+// BESTSELLER PRODUCTS
 export const bestsellerProducts = async (req: Request, res: Response) => {
   try {
     const { page = 1, limit = 10 } = req.body;
@@ -240,3 +257,4 @@ export const getFeaturedProducts = async (req: Request, res: Response) => {
     return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
   }
 };
+
