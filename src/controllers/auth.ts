@@ -165,6 +165,11 @@ export const register = async (req: Request, res: Response) => {
             isVerified: true
         };
 
+        // Only allow typeofPlant for SELLER
+        if (existingUser.userType !== "SELLER") {
+            delete updateData.typeofPlant;
+        }
+
         // Save uploaded photo to 'image' field as required by schema
         if (uploadedPhoto) {
             updateData.image = uploadedPhoto;
