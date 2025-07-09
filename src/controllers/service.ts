@@ -16,7 +16,7 @@ export const getAllServices = async (req: Request, res: Response) => {
 // GET a single service by ID
 export const getServiceById = async (req: Request, res: Response) => {
   try {
-    const service = await Service.findById(req.params.id);
+    const service = await Service.findOne({ _id: req.body.id, isActive: true });
     if (!service) return res.status(404).json(new apiResponse(404, 'Service not found', {}, 'Not found'));
     res.status(200).json(new apiResponse(200, 'Service fetched successfully', { service }, {}));
   } catch (err) {
@@ -53,7 +53,7 @@ export const updateService = async (req: Request, res: Response) => {
     if (req.user && req.user.id) {
       updateData.updatedBy = req.user.id;
     }
-    const service = await Service.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    const service = await Service.findByIdAndUpdate(req.body.id, updateData, { new: true });
     if (!service) return res.status(404).json(new apiResponse(404, 'Service not found', {}, 'Not found'));
     res.status(200).json(new apiResponse(200, 'Service updated successfully', { service }, {}));
   } catch (err) {
@@ -64,7 +64,7 @@ export const updateService = async (req: Request, res: Response) => {
 // SOFT DELETE (deactivate) a service
 export const deleteService = async (req: Request, res: Response) => {
   try {
-    const service = await Service.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
+    const service = await Service.findByIdAndUpdate(req.body.id, { isActive: false }, { new: true });
     if (!service) return res.status(404).json(new apiResponse(404, 'Service not found', {}, 'Not found'));
     res.status(200).json(new apiResponse(200, 'Service deactivated', { service }, {}));
   } catch (err) {

@@ -4,8 +4,8 @@ import { authenticate } from '../middleware/authenticate';
 
 const faqRouter = express.Router();
 
-faqRouter.post('/faqs', authenticate, createFaq);
-faqRouter.get('/faqs', getFaqs);
+faqRouter.post('/', authenticate, createFaq);
+faqRouter.get('/', getFaqs);
 faqRouter.put('/faqs/:id', authenticate, updateFaq);
 faqRouter.delete('/faqs/:id', authenticate, deleteFaq);
 

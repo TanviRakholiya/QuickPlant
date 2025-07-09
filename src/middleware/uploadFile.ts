@@ -43,9 +43,11 @@ export default upload;
 // Helper to create storage for a subfolder
 function makeStorage(subfolder: string, prefix: string) {
   const dir = path.join(__dirname, `../Public/Image/${subfolder}`);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   return multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, dir),
+    destination: (_req, _file, cb) => {
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
     filename: (_req, file, cb) => {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
       cb(null, `${prefix}_${uniqueSuffix}${path.extname(file.originalname)}`);
@@ -66,6 +68,9 @@ export const featureIconUpload = multer({ storage: makeStorage('feature-icon', '
 
 // For review photos
 export const reviewUpload = multer({ storage: makeStorage('review', 'review') });
+// For plant-collection images
+export const plantCollectionUpload = multer({ storage: makeStorage('plant-collection', 'plantcollection') });
+
 
 
 

@@ -16,7 +16,7 @@ export const getAllPlans = async (req: Request, res: Response) => {
 // GET ONE PLAN
 export const getPlanById = async (req: Request, res: Response) => {
   try {
-    const plan = await Plan.findOne({ _id: req.params.id, isDeleted: false });
+    const plan = await Plan.findOne({ _id: req.body.id, isDeleted: false });
     if (!plan) {
       return res.status(404).json(new apiResponse(404, 'Plan not found', {}, {}));
     }
@@ -29,6 +29,7 @@ export const getPlanById = async (req: Request, res: Response) => {
 // CREATE PLAN
 export const createPlan = async (req: Request, res: Response) => {
   try {
+   
     const { name } = req.body;
 
     const existingPlan = await Plan.findOne({ name, isDeleted: false });
@@ -36,10 +37,11 @@ export const createPlan = async (req: Request, res: Response) => {
       return res.status(400).json(new apiResponse(400, 'Plan with this name already exists', {}, {}));
     }
 
+    const userId = req.user && (req.user._id || req.user.id);
     const plan = new Plan({
       ...req.body,
-      createdBy: req.user && req.user.id ? req.user.id : undefined,
-      updatedBy: req.user && req.user.id ? req.user.id : undefined
+      createdBy: userId,
+      updatedBy: userId
     });
     await plan.save();
 
@@ -56,7 +58,7 @@ export const updatePlan = async (req: Request, res: Response) => {
     if (req.user && req.user.id) {
       updateData.updatedBy = req.user.id;
     }
-    const plan = await Plan.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    const plan = await Plan.findByIdAndUpdate(req.body.id, updateData, { new: true });
 
     if (!plan || plan.isDeleted) {
       return res.status(404).json(new apiResponse(404, 'Plan not found', {}, {}));
@@ -86,7 +88,7 @@ export const deactivatePlan = async (req: Request, res: Response) => {
 // DELETE PLAN (Soft Delete)
 export const deletePlan = async (req: Request, res: Response) => {
   try {
-    const plan = await Plan.findByIdAndUpdate(req.params.id, { isDeleted: true }, { new: true });
+    const plan = await Plan.findByIdAndUpdate(req.body.id, { isDeleted: true }, { new: true });
 
     if (!plan) {
       return res.status(404).json(new apiResponse(404, 'Plan not found', {}, {}));

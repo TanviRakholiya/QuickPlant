@@ -9,6 +9,7 @@ const serviceSchema = new mongoose.Schema({
   plantsCount: { type: String }, // Number of plants covered (e.g., '5-7')
   image: { type: String }, // Image URL/path
   isActive: { type: Boolean, default: true }, // Service active status
+  isDeleted:{type:Boolean,default:false},
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Creator reference
   updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } // Updater reference
 }, { timestamps: true });    

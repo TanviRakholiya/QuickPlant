@@ -21,13 +21,13 @@ serviceRouter.post('/', authenticate, validate(serviceValidation.create), servic
 serviceRouter.get('/', getAllServices);
 
 // Get a single service by ID
-serviceRouter.get('/:id', getServiceById);
+serviceRouter.get('/id', getServiceById);
 
 // Update a service
-serviceRouter.put('/:id', authenticate, validate(serviceValidation.update), serviceUpload.single('image'), updateService);
+serviceRouter.put('/', authenticate, validate(serviceValidation.update), serviceUpload.single('image'), updateService);
 
 // Soft delete (deactivate) a service
-serviceRouter.patch('/:id/deactivate', authenticate, validate(serviceValidation.delete), deleteService);
+serviceRouter.patch('/deactivate', authenticate, validate(serviceValidation.delete), deleteService);
 
 
 export default serviceRouter; 

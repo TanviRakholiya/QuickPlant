@@ -15,10 +15,10 @@ import { planValidation } from '../helper/validation';
 const planRouter = express.Router();
 
 planRouter.get('/', getAllPlans);
-planRouter.get('/:id', getPlanById);
+planRouter.get('/id', getPlanById);
 planRouter.post('/', authenticate, validate(planValidation.create), createPlan);
-planRouter.put('/:id', authenticate, validate(planValidation.update), updatePlan);
+planRouter.put('/id', authenticate, validate(planValidation.update), updatePlan);
 planRouter.patch('/:id/deactivate', deactivatePlan);
-planRouter.delete('/:id', authenticate, validate(planValidation.delete), deletePlan)
+planRouter.delete('/', authenticate, validate(planValidation.delete), deletePlan)
   
-export default planRouter; 
+export default planRouter;  
