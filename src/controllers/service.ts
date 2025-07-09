@@ -31,6 +31,8 @@ export const createService = async (req: Request, res: Response) => {
     const service = new Service({
       ...req.body,
       image: imagePath,
+      createdBy: req.user && req.user.id ? req.user.id : undefined,
+      updatedBy: req.user && req.user.id ? req.user.id : undefined
     });
     await service.save();
     res.status(201).json(new apiResponse(201, 'Service created successfully', { service }, {}));
@@ -48,6 +50,9 @@ export const updateService = async (req: Request, res: Response) => {
     const imagePath = req.file ? `/uploads/service-images/${req.file.filename}` : undefined;
     const updateData = { ...req.body };
     if (imagePath) updateData.image = imagePath;
+    if (req.user && req.user.id) {
+      updateData.updatedBy = req.user.id;
+    }
     const service = await Service.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!service) return res.status(404).json(new apiResponse(404, 'Service not found', {}, 'Not found'));
     res.status(200).json(new apiResponse(200, 'Service updated successfully', { service }, {}));

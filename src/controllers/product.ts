@@ -63,21 +63,26 @@ export const getAllProducts = async (req: Request, res: Response) => {
     const sort: any = {};
     sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    let productsQuery = Product.find(query)
+    let products = await Product.find(query)
       .populate('category', 'name image')
       .populate({
         path: 'uploadedBy',
-        select: 'fullName email userType'
+        select: 'userType'
       })
       .limit(Number(limit))
       .skip((Number(page) - 1) * Number(limit))
       .sort(sort);
 
     if (userType) {
-      productsQuery = productsQuery.where('uploadedBy.userType').equals(userType);
+      products = products.filter(
+        p =>
+          p.uploadedBy &&
+          typeof p.uploadedBy === 'object' &&
+          'userType' in p.uploadedBy &&
+          (p.uploadedBy as any).userType === userType
+      );
     }
 
-    const products = await productsQuery;
     const total = await Product.countDocuments(query);
 
     return res.status(200).json(new apiResponse(200, 'Products fetched successfully', {
@@ -112,6 +117,7 @@ export const getProductById = async (req: Request, res: Response) => {
 // UPDATE PRODUCT
 export const updateProduct = async (req: Request, res: Response) => {
   try {
+    
     const images = req.files ? (req.files as any[]).map(file => `/uploads/products/${file.filename}`) : undefined;
 
     const updateData: any = {
@@ -123,14 +129,15 @@ export const updateProduct = async (req: Request, res: Response) => {
 
     if (images && images.length > 0) updateData.images = images;
 
+    if (req.user && req.user.id) {
+      updateData.updatedBy = req.user.id;
+    }
+
     const product = await Product.findOneAndUpdate(
       { _id: req.body.id, isDeleted: false },
       updateData,
       { new: true }
     );
-    if (req.user && req.user.id) {
-      updateData.updatedBy = req.user.id;
-    }
 
     if (!product) {
       return res.status(404).json(new apiResponse(404, 'Product not found', {}, {}));
@@ -213,10 +220,6 @@ export const bestsellerProducts = async (req: Request, res: Response) => {
 // ADMIN: FEATURE/UNFEATURE PRODUCT
 export const adminFeatureProduct = async (req: Request, res: Response) => {
   try {
-    // Only allow if userType is 'ADMIN'
-    if (!req.user || req.user.userType !== 'ADMIN') {
-      return res.status(403).json(new apiResponse(403, responseMessage?.accessDenied || 'Access denied', {}, {}));
-    }
     const { id } = req.params;
     const { isFeatured } = req.body;
     if (typeof isFeatured !== 'boolean') {
@@ -254,6 +257,7 @@ export const getFeaturedProducts = async (req: Request, res: Response) => {
       total
     }, {}));
   } catch (error: any) {
+    console.log(error);
     return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
   }
 };

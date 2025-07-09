@@ -14,7 +14,7 @@ const featurerouter = express.Router();
 
 featurerouter.get('/', getFeatures);
 featurerouter.post('/', authenticate, validate(featureValidation.create), featureIconUpload.single('image'), createFeature);
-featurerouter.put('/:id', authenticate, validate(featureValidation.update), featureIconUpload.single('image'), updateFeature);
-featurerouter.delete('/:id', authenticate, validate(featureValidation.delete), deleteFeature);
+featurerouter.put('/', authenticate, validate(featureValidation.update), featureIconUpload.single('image'), updateFeature);
+featurerouter.delete('/', authenticate, validate(featureValidation.delete), deleteFeature);
 
 export default featurerouter;   

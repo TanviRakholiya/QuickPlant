@@ -6,7 +6,7 @@ const featureSchema = new mongoose.Schema({
   description: { type: String, required: true },   
   page: {
     type: String,
-    enum: ['ABOUT', 'CUSTOMERPAGE', 'SELLERPAGE', 'GARDENERPAGE'],
+    enum: ['ABOUTPAGE', 'CUSTOMERPAGE', 'SELLERPAGE', 'GARDENERPAGE'],
     required: true
   },
   isDeleted: { type: Boolean, default: false },

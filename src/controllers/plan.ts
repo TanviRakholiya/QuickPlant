@@ -36,7 +36,11 @@ export const createPlan = async (req: Request, res: Response) => {
       return res.status(400).json(new apiResponse(400, 'Plan with this name already exists', {}, {}));
     }
 
-    const plan = new Plan(req.body);
+    const plan = new Plan({
+      ...req.body,
+      createdBy: req.user && req.user.id ? req.user.id : undefined,
+      updatedBy: req.user && req.user.id ? req.user.id : undefined
+    });
     await plan.save();
 
     return res.status(201).json(new apiResponse(201, 'Plan created successfully', { data: plan }, {}));
@@ -48,7 +52,11 @@ export const createPlan = async (req: Request, res: Response) => {
 // UPDATE PLAN
 export const updatePlan = async (req: Request, res: Response) => {
   try {
-    const plan = await Plan.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updateData = { ...req.body };
+    if (req.user && req.user.id) {
+      updateData.updatedBy = req.user.id;
+    }
+    const plan = await Plan.findByIdAndUpdate(req.params.id, updateData, { new: true });
 
     if (!plan || plan.isDeleted) {
       return res.status(404).json(new apiResponse(404, 'Plan not found', {}, {}));

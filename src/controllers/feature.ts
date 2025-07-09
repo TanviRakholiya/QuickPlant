@@ -11,6 +11,8 @@ export const createFeature = async (req: Request, res: Response) => {
     const feature = new Feature({
       ...req.body,
       image: imagePath,
+      createdBy: req.user && req.user.id ? req.user.id : undefined,
+      updatedBy: req.user && req.user.id ? req.user.id : undefined
     });
 
     await feature.save();
@@ -42,7 +44,14 @@ export const getFeatures = async (req: Request, res: Response) => {
 // UPDATE
 export const updateFeature = async (req: Request, res: Response) => {
   try {
-    const feature = await Feature.findByIdAndUpdate(req.body.id, req.body, { new: true });
+    const updateData = { ...req.body };
+    if (req.file) {
+      updateData.image = `/uploads/features/${req.file.filename}`;
+    }
+    if (req.user && req.user.id) {
+      updateData.updatedBy = req.user.id;
+    }
+    const feature = await Feature.findByIdAndUpdate(req.body.id, updateData, { new: true });
 
     if (!feature) {
       return res.status(404).json(new apiResponse(404, 'Feature not found', {}, {}));

@@ -5,7 +5,8 @@ export const validate = (schema: any) => {
     return (req: Request, res: Response, next: NextFunction) => {
         const { error } = schema.validate(req.body, {
             abortEarly: false,
-            stripUnknown: true
+            stripUnknown: true,
+            allowUnknown: false
         });
 
         if (error) {

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { categoriesModel } from '../database/models/category';
 import { apiResponse } from '../common';
 import { responseMessage } from '../helper';
+import { error } from 'console';
 
 // CREATE
 export const createCategory = async (req: Request, res: Response) => {
@@ -11,8 +12,10 @@ export const createCategory = async (req: Request, res: Response) => {
 
     const newCategory = new categoriesModel({
       type,
-      name,
+      name, 
       image: imagePath,
+      createdBy: req.user && req.user.id ? req.user.id : undefined,
+      updatedBy: req.user && req.user.id ? req.user.id : undefined
     });
 
     await newCategory.save();
@@ -29,7 +32,7 @@ export const getAllCategories = async (req: Request, res: Response) => {
   try {
     let categories: any;
 
-    if (['service', 'work', 'plant'].includes(req.body.type)) {
+    if (['SERVICE', 'WORK', 'PLANT'].includes(req.body.type)) {
       categories = await categoriesModel.find({ isDeleted: false, type: req.body.type });
     } else {
       categories = await categoriesModel.find({ isDeleted: false });
@@ -37,6 +40,7 @@ export const getAllCategories = async (req: Request, res: Response) => {
 
     res.status(200).json(new apiResponse(200, 'Category list fetched', { data: categories }, {}));
   } catch (err) {
+    console.log(error);
     res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, err));
   }
 };
@@ -66,6 +70,10 @@ export const updateCategory = async (req: Request, res: Response) => {
     if (name) updatedData.name = name;
     if (type) updatedData.type = type;
     if (imagePath) updatedData.image = imagePath;
+
+    if (req.user && req.user.id) {
+      updatedData.updatedBy = req.user.id;
+    }
 
     const updated = await categoriesModel.findOneAndUpdate(
       { _id: req.body.id, isDeleted: false },

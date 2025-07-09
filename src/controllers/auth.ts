@@ -148,14 +148,19 @@ export const register = async (req: Request, res: Response) => {
         const uploadedPhoto = req.file ? req.file.filename : null;
         const hashedPassword = await bcryptjs.hash(req.body.password, 10);
 
-        // Robustly handle typeofPlant as array in controller
-        if (req.body.typeofPlant && typeof req.body.typeofPlant === 'string') {
-            try {
-                const parsed = JSON.parse(req.body.typeofPlant);
-                req.body.typeofPlant = Array.isArray(parsed) ? parsed : [parsed];
-            } catch {
-                req.body.typeofPlant = [req.body.typeofPlant];
+        // Only process typeofPlant for SELLER
+        if (existingUser.userType === 'SELLER') {
+            if (req.body.typeofPlant && typeof req.body.typeofPlant === 'string') {
+                try {
+                    const parsed = JSON.parse(req.body.typeofPlant);
+                    req.body.typeofPlant = Array.isArray(parsed) ? parsed : [parsed];
+                } catch {
+                    req.body.typeofPlant = [req.body.typeofPlant];
+                }
             }
+        } else {
+            // Remove typeofPlant for non-SELLER
+            delete req.body.typeofPlant;
         }
         const updateData = {
             ...req.body,

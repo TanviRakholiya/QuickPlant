@@ -17,7 +17,7 @@ const categoryRouter = express.Router();
 categoryRouter.post('/', authenticate, validate(categoryValidation.create), categoryUpload.single('image'), createCategory);
 categoryRouter.get('/', getAllCategories);
 categoryRouter.get('/id', getCategoryById);
-categoryRouter.put('/:id', authenticate, validate(categoryValidation.update), categoryUpload.single('image'), updateCategory);
-categoryRouter.delete('/:id', authenticate, validate(categoryValidation.delete), deleteCategory);
+categoryRouter.put('/', authenticate, validate(categoryValidation.update), categoryUpload.single('image'), updateCategory);
+categoryRouter.delete('/', authenticate, validate(categoryValidation.delete), deleteCategory);
 
 export default categoryRouter;
