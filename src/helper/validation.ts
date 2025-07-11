@@ -2,7 +2,14 @@ import Joi from 'joi';
 
 export const authValidation = {
     otpSent: Joi.object({
-        fullName: Joi.string().min(3).max(50).required(),
+        fullName: Joi.string()
+            .min(3)
+            .max(50)
+             .regex(/^[a-zA-Z .]+$/)
+            .required()
+            .messages({
+                'string.regex.base': 'Full name must contain only letters and spaces'
+            }),
         email: Joi.string().email().optional(),
         mobileNo: Joi.string().pattern(/^[0-9]{10}$/).optional(),
         userType: Joi.string().valid("CUSTOMER","SELLER","GARDENER").required()
@@ -61,7 +68,14 @@ export const authValidation = {
     }),
 
     adminSignUp: Joi.object({
-        fullName: Joi.string().min(3).max(50).required(),
+        fullName: Joi.string()
+            .min(3)
+            .max(50)
+            .pattern(/^[a-zA-Z\s]+$/)
+            .required()
+            .messages({
+                'string.pattern.base': 'Full name must contain only letters and spaces'
+            }),
         email: Joi.string().email().required(),
         phoneNumber: Joi.string().pattern(/^[0-9]{10}$/).required(),
         password: Joi.string()

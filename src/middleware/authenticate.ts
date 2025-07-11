@@ -15,10 +15,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     }
 
     const decoded: any = jwt.verify(token, secretKey);
-    console.log('Decoded JWT:', decoded); // Debug log
 
     const user = await userModel.findById(decoded.id);
-    console.log('User found:', user); // Debug log
     if (!user || user.isDeleted) {
       return res.status(404).json(new apiResponse(404, responseMessage?.userNotFound, {}, {}));
     }

@@ -61,7 +61,7 @@ export const getAllReviews = async (req: Request, res: Response) => {
     return res.status(200).json(new apiResponse(200, 'Reviews fetched successfully', {
       data: {
         reviews,
-        totalPages: Math.ceil(total / Number(limit)),
+        totalPages: Math.ceil(total /  Number(limit)),
         currentPage: Number(page),
         total
       }

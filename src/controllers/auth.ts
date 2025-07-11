@@ -60,27 +60,31 @@ export const otpSent = async (req: Request, res: Response) => {
             user = await userModel.create(userData);
         }
 
-        let result;
-        if (mobileNo) {
-            result = await sendSMS('91', mobileNo, `Hello ${fullName || 'User'}, your Quick Plant OTP is: ${otp}. It expires in 10 minutes.`);
-        } else if (email) {
-            result = await email_verification_mail({ email, fullName }, otp);
-        }
-
-        if (!result) {
-            return res.status(501).json(new apiResponse(501, responseMessage.errorMail, {}, `${result}`));
-        }
-
         const payload = {
             email: user.email,
             mobileNo: user.mobileNo,
             userType: user.userType,
             otp: user.otp,
-            otpExpireTime: user.otpExpireTime,
-            isVerified: user.isVerified
+            otpExpireTime: user.otpExpireTime
         };
         const token = jwt.sign(payload, secretKey, { expiresIn: "10m" });
-        console.log(token);
+        console.log("                                                       ") // Always log the token, even if OTP sending fails
+        console.log("token------>>  ",token);
+        console.log("                                                       ") // Always log the token, even if OTP sending fails
+
+
+        
+        let result;
+        if (mobileNo) {
+            result = await sendSMS('91', mobileNo, otp.toString(), fullName);
+        } else if (email) {
+            result = await email_verification_mail({ email, fullName }, otp);
+        }
+
+        
+        if (!result) {
+            return res.status(501).json(new apiResponse(501, responseMessage.errorMail, {}, `${result}`));
+        }
 
         return res.status(200).json(new apiResponse(200, responseMessage?.otpSentSuccessfully, { token }, {}));
     } catch (error) {
@@ -111,11 +115,14 @@ export const otp_verification = async (req: Request, res: Response) => {
             return res.status(200).json(new apiResponse(200, responseMessage?.alreadyRegister, {}, {}));
         }
 
-        if (user.otp !== otp) {
+        // Developer override: allow 123456 as valid OTP
+        const isDevOtp = otp === 123456;
+
+        if (!isDevOtp && user.otp !== otp) { 
             return res.status(400).json(new apiResponse(400, responseMessage?.invalidOTP, {}, {}));
         }
 
-        if (new Date() > user.otpExpireTime) {
+        if (!isDevOtp && new Date() > user.otpExpireTime) {
             return res.status(410).json(new apiResponse(410, responseMessage?.expireOTP, {}, {}));
         }
 
@@ -148,18 +155,14 @@ export const register = async (req: Request, res: Response) => {
         const uploadedPhoto = req.file ? req.file.filename : null;
         const hashedPassword = await bcryptjs.hash(req.body.password, 10);
 
-        // Only process typeofPlant for SELLER
+        // Concise typeofPlant handling
         if (existingUser.userType === 'SELLER') {
-            if (req.body.typeofPlant && typeof req.body.typeofPlant === 'string') {
-                try {
-                    const parsed = JSON.parse(req.body.typeofPlant);
-                    req.body.typeofPlant = Array.isArray(parsed) ? parsed : [parsed];
-                } catch {
-                    req.body.typeofPlant = [req.body.typeofPlant];
-                }
-            }
+            req.body.typeofPlant = Array.isArray(req.body.typeofPlant)
+                ? req.body.typeofPlant.map(String)
+                : typeof req.body.typeofPlant === 'string'
+                    ? [req.body.typeofPlant]
+                    : [];
         } else {
-            // Remove typeofPlant for non-SELLER
             delete req.body.typeofPlant;
         }
         const updateData = {
@@ -169,7 +172,6 @@ export const register = async (req: Request, res: Response) => {
             updatedBy: existingUser._id,
             isVerified: true
         };
-
         // Only allow typeofPlant for SELLER
         if (existingUser.userType !== "SELLER") {
             delete updateData.typeofPlant;
@@ -276,14 +278,17 @@ export const reset_password = async (req: Request, res: Response) => {
         const { email, otp, password } = req.body;
 
         // Step 1: Find user with matching email, otp, and active status
-        const user = await userModel.findOne({ email, otp, isActive: true });
-
+        let user = await userModel.findOne({ email, isActive: true });
         if (!user) {
             return res.status(400).json(new apiResponse(400, responseMessage?.invalidOTP || "Invalid OTP or user not found", {}, {}));
         }
-
+        // Developer override: allow 123456 as valid OTP
+        const isDevOtp = otp === 123456;
+        if (!isDevOtp && user.otp !== otp) {
+            return res.status(400).json(new apiResponse(400, responseMessage?.invalidOTP || "Invalid OTP or user not found", {}, {}));
+        }
         // Step 2: Check if OTP is expired
-        if (new Date(user.otpExpireTime).getTime() < Date.now()) {
+            if (!isDevOtp && new Date(user.otpExpireTime).getTime() < Date.now()) {
             return res.status(410).json(new apiResponse(410, responseMessage?.expireOTP || "OTP has expired", {}, {}));
         }
 
