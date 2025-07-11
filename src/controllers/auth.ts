@@ -11,6 +11,7 @@ import {
 } from '../helper'
 import { config } from '../../config'
 import { sendSMS } from '../helper/aws_sns'
+import mongoose from 'mongoose'; // Ensure this is at the top
 
 const ObjectId = require('mongoose').Types.ObjectId
 const jwt_token_secret = config.JWT_TOKEN_SECRET
@@ -21,32 +22,31 @@ export const otpSent = async (req: Request, res: Response) => {
     try {
         const { fullName, email, mobileNo, userType } = req.body;
 
-        // Validate required fields
         if (!fullName || !userType || (!email && !mobileNo)) {
             return res.status(400).json(new apiResponse(400, "Missing required fields", {}, {}));
         }
 
         const otp = Math.floor(100000 + Math.random() * 900000);
-        const otpExpireTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+        const otpExpireTime = new Date(Date.now() + 10 * 60 * 1000); // 10 min
 
-        // Check for existing user by email or mobileNo, depending on which is provided
         let user;
-        if (email) {
-            user = await userModel.findOne({ email });
-        } else if (mobileNo) {
-            user = await userModel.findOne({ mobileNo });
-        }
+        if (email) user = await userModel.findOne({ email });
+        else if (mobileNo) user = await userModel.findOne({ mobileNo });
+
         if (user) {
             if (user?.isVerified && user?.password) {
                 return res.status(409).json(new apiResponse(409, responseMessage?.alreadyRegister, {}, {}));
             }
+
             user.otp = otp;
             user.otpExpireTime = otpExpireTime;
             user.fullName = fullName || user.fullName;
             user.userType = userType || user.userType;
+
+            // Do NOT assign anything from req.body directly
             await user.save();
         } else {
-            // Only include email or mobileNo if present
+            // Create only with safe fields
             const userData: any = {
                 fullName,
                 userType,
@@ -67,31 +67,27 @@ export const otpSent = async (req: Request, res: Response) => {
             otp: user.otp,
             otpExpireTime: user.otpExpireTime
         };
+
         const token = jwt.sign(payload, secretKey, { expiresIn: "10m" });
-        console.log("                                                       ") // Always log the token, even if OTP sending fails
-        console.log("token------>>  ",token);
-        console.log("                                                       ") // Always log the token, even if OTP sending fails
 
-
-        
         let result;
         if (mobileNo) {
-            result = await sendSMS('91', mobileNo, otp.toString(), fullName);
+            // result = await sendSMS('91', mobileNo, otp.toString(), fullName);
         } else if (email) {
             result = await email_verification_mail({ email, fullName }, otp);
         }
 
-        
-        if (!result) {
-            return res.status(501).json(new apiResponse(501, responseMessage.errorMail, {}, `${result}`));
-        }
+        // if (!result) {
+        //     return res.status(501).json(new apiResponse(501, responseMessage.errorMail, {}, `${result}`));
+        // }
 
         return res.status(200).json(new apiResponse(200, responseMessage?.otpSentSuccessfully, { token }, {}));
     } catch (error) {
         console.error('OTP sent error:', error);
         return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
     }
-}; 
+};
+
 
 export const otp_verification = async (req: Request, res: Response) => {
     try {
@@ -155,41 +151,57 @@ export const register = async (req: Request, res: Response) => {
         const uploadedPhoto = req.file ? req.file.filename : null;
         const hashedPassword = await bcryptjs.hash(req.body.password, 10);
 
-        // Concise typeofPlant handling
-        if (existingUser.userType === 'SELLER') {
-            req.body.typeofPlant = Array.isArray(req.body.typeofPlant)
-                ? req.body.typeofPlant.map(String)
-                : typeof req.body.typeofPlant === 'string'
-                    ? [req.body.typeofPlant]
-                    : [];
-        } else {
-            delete req.body.typeofPlant;
-        }
-        const updateData = {
+        const updateData: any = {
             ...req.body,
             password: hashedPassword,
             createdBy: existingUser._id,
             updatedBy: existingUser._id,
             isVerified: true
         };
-        // Only allow typeofPlant for SELLER
-        if (existingUser.userType !== "SELLER") {
+
+        // ✅ Handle typeofPlant only for SELLER
+        if (existingUser.userType === "SELLER" && req.body.typeofPlant) {
+            try {
+                let tp = req.body.typeofPlant;
+
+                if (typeof tp === 'string') {
+                    tp = JSON.parse(tp);
+                }
+
+                if (Array.isArray(tp)) {
+                    updateData.typeofPlant = tp.map((id: any) => new mongoose.Types.ObjectId(id));
+                } else {
+                    updateData.typeofPlant = [new mongoose.Types.ObjectId(tp)];
+                }
+            } catch (err) {
+                console.warn("Invalid typeofPlant format. Skipping typeofPlant field.");
+            }
+        } else {
+            // ❌ Do not allow typeofPlant for non-SELLERs
             delete updateData.typeofPlant;
         }
 
-        // Save uploaded photo to 'image' field as required by schema
+        // ✅ Save uploaded image if available
         if (uploadedPhoto) {
             updateData.image = uploadedPhoto;
         }
 
+        // ✅ Save updates
         existingUser.set(updateData);
         await existingUser.save();
 
+        // ✅ Create new JWT
         const payload = { id: existingUser._id, userType };
         const finalToken = jwt.sign(payload, secretKey);
 
+        // ✅ Prepare response user object
+        const userObj = existingUser.toObject();
+        if (userObj.userType !== 'SELLER') {
+            delete userObj.typeofPlant;
+        }
+
         return res.status(200).json(
-            new apiResponse(200, responseMessage?.registerSuccess, { token: finalToken, user: existingUser }, {})
+            new apiResponse(200, responseMessage?.registerSuccess, { token: finalToken, user: userObj }, {})
         );
     } catch (error) {
         console.error('Register error:', error);

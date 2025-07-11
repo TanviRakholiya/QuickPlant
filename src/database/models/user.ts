@@ -6,11 +6,11 @@ const userSchema: any = new mongoose.Schema({
     },
     email: {
         type: String,
-        required:false
+        required: false
     },
     mobileNo: {
         type: String,
-        required:false
+        required: false
     },
     password: {
         type: String
@@ -35,8 +35,8 @@ const userSchema: any = new mongoose.Schema({
     },
     typeofPlant: {
         type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
-        required: false,
-    },
+        default: undefined // ⚠️ Prevents empty array from auto-saving
+      },
     experience: {
         type: String
     },
