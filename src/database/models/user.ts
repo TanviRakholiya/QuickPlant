@@ -41,9 +41,9 @@ const userSchema: any = new mongoose.Schema({
         type: String
     },
     workCategory: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category"
-    },
+        type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Category" }],
+        default: undefined // ⚠️ Prevents empty array from auto-saving
+      },
     image: {
         type: String,
         required: false
