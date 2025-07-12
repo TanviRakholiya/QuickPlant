@@ -8,25 +8,32 @@ import { error } from 'console';
 export const createCategory = async (req: Request, res: Response) => {
   try {
     const { type, name } = req.body;
-    const imagePath = req.file ? `/uploads/plant-category/${req.file.filename}` : null;
 
-    const newCategory = new categoriesModel({
+    const newCategoryData: any = {
       type,
-      name, 
-      image: imagePath,
-      createdBy: req.user && req.user.id ? req.user.id : undefined,
-      updatedBy: req.user && req.user.id ? req.user.id : undefined
-    });
+      name,
+      createdBy: req.user?.id,
+      updatedBy: req.user?.id
+    };
 
+    // ✅ Only add `image` if file exists
+    if (req.file) {
+      newCategoryData.image = `/uploads/plant-category/${req.file.filename}`;
+    }
+
+    const newCategory = new categoriesModel(newCategoryData);
     await newCategory.save();
 
-    res.status(201).json(new apiResponse(201, 'Category created', { data: newCategory }, {}));
+    return res.status(201).json(
+      new apiResponse(201, 'Category created', { data: newCategory }, {})
+    );
   } catch (err) {
     console.error(err);
-    res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, err));
+    return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, err));
   }
 };
 
+ 
 // LIST
 export const getAllCategories = async (req: Request, res: Response) => {
   try {

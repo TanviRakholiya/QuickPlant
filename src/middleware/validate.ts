@@ -16,4 +16,4 @@ export const validate = (schema: any) => {
 
         next();
     };
-}; 
+};  
