@@ -71,6 +71,10 @@ export const reviewUpload = multer({ storage: makeStorage('review', 'review') })
 // For plant-collection images
 export const plantCollectionUpload = multer({ storage: makeStorage('plant-collection', 'plantcollection') });
 
+// For blog images
+export const blogUpload = multer({ storage: makeStorage('blogs', 'blog') });
+
+
 
 
 

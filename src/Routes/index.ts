@@ -8,6 +8,7 @@ import serviceRouter from './service.route';
 import reviewRouter from './review.route';
 import plantCollectionRouter from './plantCollection.route';
 import faqRouter from './faq.route';
+import blogRouter from './blog.route';
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use('/services', serviceRouter);
 router.use('/reviews', reviewRouter);
 router.use('/plantcollection', plantCollectionRouter);
 router.use('/faq', faqRouter);
+router.use('/blog',blogRouter)
 
 export { router };
