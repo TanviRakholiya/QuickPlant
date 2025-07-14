@@ -36,7 +36,6 @@ export const authValidation = {
         nurseryName: Joi.string().optional(),
         ownerName: Joi.string().optional(),
         experience: Joi.string().optional(),
-        image: Joi.string().optional()
     }),
 
     login: Joi.object({
