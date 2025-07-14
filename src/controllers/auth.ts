@@ -140,96 +140,99 @@ export const otp_verification = async (req: Request, res: Response) => {
 };
 
 export const register = async (req: Request, res: Response) => {
-    try {
-        const { id, userType } = req.user;
+  try {
+    const { id, userType } = req.user;
 
-        const existingUser = await userModel.findById(id);
-        if (!existingUser || !existingUser.isVerified) {
-            return res.status(403).json(new apiResponse(403, "OTP verification required", {}, {}));
-        }
+    const existingUser = await userModel.findById(id);
+    if (!existingUser || !existingUser.isVerified) {
+      return res
+        .status(403)
+        .json(new apiResponse(403, "OTP verification required", {}, {}));
+    }
 
-        const uploadedPhoto = req.file ? req.file.filename : null;
-        const hashedPassword = await bcryptjs.hash(req.body.password, 10);
+    // ✅ Extract uploaded image from req.file
+    const uploadedPhoto = req.file?.filename || null;
 
-        const updateData: any = {
-            ...req.body,
-            password: hashedPassword,
-            createdBy: existingUser._id,
-            updatedBy: existingUser._id,
-            isVerified: true
-        };
+    // ✅ Hash the password
+    const hashedPassword = await bcryptjs.hash(req.body.password, 10);
 
-        // ✅ Handle typeofPlant only for SELLER
-        if (existingUser.userType === "SELLER" && req.body.typeofPlant) {
-            try {
-                let tp = req.body.typeofPlant;
+    // ✅ Build update data (exclude image for now)
+    const updateData: any = {
+      ...req.body,
+      password: hashedPassword,
+      createdBy: existingUser._id,
+      updatedBy: existingUser._id,
+      isVerified: true
+    };
 
-                if (typeof tp === 'string') {
-                    tp = JSON.parse(tp);
-                }
+    // ❌ Prevent accidental object overwrite on image field
+    delete updateData.image;
 
-                if (Array.isArray(tp)) {
-                    updateData.typeofPlant = tp.map((id: any) => new mongoose.Types.ObjectId(id));
-                } else {
-                    updateData.typeofPlant = [new mongoose.Types.ObjectId(tp)];
-                }
-            } catch (err) {
-                console.warn("Invalid typeofPlant format. Skipping typeofPlant field.");
-            }
-        } else {
-            // ❌ Do not allow typeofPlant for non-SELLERs
-            delete updateData.typeofPlant;
-        }
-
-    if (existingUser.userType === "GARDENER" && req.body.workCategory) {
-        try {
-            let wc = req.body.workCategory;
-
-            if (typeof wc === 'string') {
-                wc = JSON.parse(wc);
-            }
-
-            if (Array.isArray(wc)) {
-                updateData.workCategory = wc.map((id: any) => new mongoose.Types.ObjectId(id));
-            } else {
-                updateData.workCategory = [new mongoose.Types.ObjectId(wc)];
-            }
-        } catch (err) {
-            console.warn("Invalid workCategory format. Skipping workCategory field.");
-        }
+    // ✅ Handle typeofPlant for SELLER only
+    if (existingUser.userType === "SELLER" && req.body.typeofPlant) {
+      try {
+        let tp = req.body.typeofPlant;
+        if (typeof tp === "string") tp = JSON.parse(tp);
+        updateData.typeofPlant = Array.isArray(tp)
+          ? tp.map((id: any) => new mongoose.Types.ObjectId(id))
+          : [new mongoose.Types.ObjectId(tp)];
+      } catch (err) {
+        console.warn("Invalid typeofPlant format. Skipping typeofPlant field.");
+      }
     } else {
-    delete updateData.workCategory;
+      delete updateData.typeofPlant;
     }
 
-        // ✅ Save uploaded image if available
-        if (uploadedPhoto) {
-            updateData.image = uploadedPhoto;
-        }
-
-        // ✅ Save updates
-        existingUser.set(updateData);
-        await existingUser.save();
-
-        // ✅ Create new JWT
-        const payload = { id: existingUser._id, userType };
-        const finalToken = jwt.sign(payload, secretKey);
-
-        // ✅ Prepare response user object
-        const userObj = existingUser.toObject();
-        if (userObj.userType !== 'SELLER') {
-            delete userObj.typeofPlant;
-        }
-
-        return res.status(200).json(
-            new apiResponse(200, responseMessage?.registerSuccess, { token: finalToken, user: userObj }, {})
-        );
-    } catch (error) {
-        console.error('Register error:', error);
-        return res.status(500).json(
-            new apiResponse(500, responseMessage.internalServerError, {}, error)
-        );
+    // ✅ Handle workCategory for GARDENER only
+    if (existingUser.userType === "GARDENER" && req.body.workCategory) {
+      try {
+        let wc = req.body.workCategory;
+        if (typeof wc === "string") wc = JSON.parse(wc);
+        updateData.workCategory = Array.isArray(wc)
+          ? wc.map((id: any) => new mongoose.Types.ObjectId(id))
+          : [new mongoose.Types.ObjectId(wc)];
+      } catch (err) {
+        console.warn("Invalid workCategory format. Skipping workCategory field.");
+      }
+    } else {
+      delete updateData.workCategory;
     }
+
+    // ✅ Add image only if uploaded
+    if (uploadedPhoto && typeof uploadedPhoto === "string") {
+      updateData.image = uploadedPhoto;
+    }
+
+    // ✅ Apply updates and save
+    existingUser.set(updateData);
+    await existingUser.save();
+
+    // ✅ Issue new token
+    const payload = { id: existingUser._id, userType };
+    const finalToken = jwt.sign(payload, secretKey);
+
+    // ✅ Clean up user object before sending
+    const userObj = existingUser.toObject();
+    if (userObj.userType !== "SELLER") {
+      delete userObj.typeofPlant;
+    }
+
+    return res.status(200).json(
+      new apiResponse(
+        200,
+        responseMessage?.registerSuccess,
+        { token: finalToken, user: userObj },
+        {}
+      )
+    );
+  } catch (error) {
+    console.error("Register error:", error);
+    return res.status(500).json(
+      new apiResponse(500, responseMessage.internalServerError, {}, error)
+    );
+  }
 };
+
 
 export const login = async (req: Request, res: Response) => {
     try {
