@@ -34,23 +34,24 @@ export const createCategory = async (req: Request, res: Response) => {
 };
 
  
-// LIST
 export const getAllCategories = async (req: Request, res: Response) => {
   try {
     let categories: any;
+    const type = req.query.type as string;
 
-    if (['SERVICE', 'WORK', 'PLANT'].includes(req.body.type)) {
-      categories = await categoriesModel.find({ isDeleted: false, type: req.body.type });
+    if (['SERVICE', 'WORK', 'PLANT'].includes(type)) {
+      categories = await categoriesModel.find({ isDeleted: false, type });
     } else {
       categories = await categoriesModel.find({ isDeleted: false });
     }
 
     res.status(200).json(new apiResponse(200, 'Category list fetched', { data: categories }, {}));
   } catch (err) {
-    console.log(error);
+    console.log(err);
     res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, err));
   }
 };
+
 
 // GET ONE
 export const getCategoryById = async (req: Request, res: Response) => {

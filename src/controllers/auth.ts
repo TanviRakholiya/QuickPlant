@@ -181,25 +181,25 @@ export const register = async (req: Request, res: Response) => {
             delete updateData.typeofPlant;
         }
 
-        if (existingUser.userType === "GARDENER" && req.body.workCategory) {
-    try {
-        let wc = req.body.workCategory;
+    if (existingUser.userType === "GARDENER" && req.body.workCategory) {
+        try {
+            let wc = req.body.workCategory;
 
-        if (typeof wc === 'string') {
-            wc = JSON.parse(wc);
-        }
+            if (typeof wc === 'string') {
+                wc = JSON.parse(wc);
+            }
 
-        if (Array.isArray(wc)) {
-            updateData.workCategory = wc.map((id: any) => new mongoose.Types.ObjectId(id));
-        } else {
-            updateData.workCategory = [new mongoose.Types.ObjectId(wc)];
+            if (Array.isArray(wc)) {
+                updateData.workCategory = wc.map((id: any) => new mongoose.Types.ObjectId(id));
+            } else {
+                updateData.workCategory = [new mongoose.Types.ObjectId(wc)];
+            }
+        } catch (err) {
+            console.warn("Invalid workCategory format. Skipping workCategory field.");
         }
-    } catch (err) {
-        console.warn("Invalid workCategory format. Skipping workCategory field.");
-    }
-} else {
+    } else {
     delete updateData.workCategory;
-}
+    }
 
         // ✅ Save uploaded image if available
         if (uploadedPhoto) {
