@@ -202,6 +202,12 @@ export const register = async (req: Request, res: Response) => {
     if (uploadedPhoto && typeof uploadedPhoto === "string") {
       updateData.image = uploadedPhoto;
     }
+    console.log("uploadedPhoto:", uploadedPhoto); // Must print filename
+console.log("updateData:", updateData); // Must include 'image' field
+
+    console.log("uploadedPhoto:", uploadedPhoto); // Must print filename
+console.log("updateData:", updateData); // Must include 'image' field
+
 
     // ✅ Apply updates and save
     existingUser.set(updateData);
