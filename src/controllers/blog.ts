@@ -6,7 +6,7 @@ import { responseMessage } from '../helper';
 // CREATE BLOG
 export const createBlog = async (req: Request, res: Response) => {
   try {
-    const image = req.file ? `/uploads/blogs/${req.file.filename}` : '';
+    const image = req.file ? `/Image/uploads/${req.file.filename}` : '';
 
     const blog = new blogModel({
       ...req.body,

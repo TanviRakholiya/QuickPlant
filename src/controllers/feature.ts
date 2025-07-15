@@ -6,7 +6,7 @@ import { responseMessage } from '../helper';
 // CREATE
 export const createFeature = async (req: Request, res: Response) => {
   try {
-    const imagePath = req.file ? `/uploads/features/${req.file.filename}` : null;
+    const imagePath = req.file ? `/Image/uploads/${req.file.filename}` : null;
 
     const feature = new Feature({
       ...req.body,
@@ -46,7 +46,7 @@ export const updateFeature = async (req: Request, res: Response) => {
   try {
     const updateData = { ...req.body };
     if (req.file) {
-      updateData.image = `/uploads/features/${req.file.filename}`;
+      updateData.image = `/Image/uploads/${req.file.filename}`;
     }
     if (req.user && req.user.id) {
       updateData.updatedBy = req.user.id;

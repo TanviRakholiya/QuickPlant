@@ -18,7 +18,7 @@ export const createCategory = async (req: Request, res: Response) => {
 
     // ✅ Only add `image` if file exists
     if (req.file) {
-      newCategoryData.image = `/uploads/plant-category/${req.file.filename}`;
+      newCategoryData.image = `/Image/uploads/${req.file.filename}`;
     }
 
     const newCategory = new categoriesModel(newCategoryData);
@@ -72,7 +72,7 @@ export const getCategoryById = async (req: Request, res: Response) => {
 export const updateCategory = async (req: Request, res: Response) => {
   try {
     const { name, type } = req.body;
-    const imagePath = req.file ? `/uploads/plant-category/${req.file.filename}` : undefined;
+    const imagePath = req.file ? `/Image/uploads/${req.file.filename}` : undefined;
 
     const updatedData: any = {};
     if (name) updatedData.name = name;

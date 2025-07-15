@@ -151,7 +151,7 @@ export const register = async (req: Request, res: Response) => {
     }
 
     // ✅ Extract uploaded image from req.file
-    const uploadedPhoto = req.file?.filename || null;
+    const uploadedPhoto = req.file ? `/Image/uploads/${req.file.filename}` : null;
 
     // ✅ Hash the password
     const hashedPassword = await bcryptjs.hash(req.body.password, 10);
@@ -203,11 +203,7 @@ export const register = async (req: Request, res: Response) => {
       updateData.image = uploadedPhoto;
     }
     console.log("uploadedPhoto:", uploadedPhoto); // Must print filename
-console.log("updateData:", updateData); // Must include 'image' field
-
-    console.log("uploadedPhoto:", uploadedPhoto); // Must print filename
-console.log("updateData:", updateData); // Must include 'image' field
-
+    console.log("updateData:", updateData); // Must include 'image' field
 
     // ✅ Apply updates and save
     existingUser.set(updateData);
@@ -375,7 +371,6 @@ export const adminSignUp = async (req: Request, res: Response) => {
         }
 
         if (isAlready?.isBlock === true) {
-
             return res.status(403).json(new apiResponse(403, responseMessage?.accountBlock, {}, {}));
         }
 
@@ -383,8 +378,14 @@ export const adminSignUp = async (req: Request, res: Response) => {
         const salt = await bcryptjs.genSalt(10);
         const hashPassword = await bcryptjs.hash(password, salt);
 
+        // Handle uploaded image
+        let imagePath = null;
+        if (req.file && req.file.filename) {
+            imagePath = `/Image/uploads/${req.file.filename}`;
+        }
+
         // Create user
-        const userData = {
+        const userData: any = {
             fullName,
             email,
             mobileNo,
@@ -392,6 +393,9 @@ export const adminSignUp = async (req: Request, res: Response) => {
             userType: "ADMIN",
             isActive: true
         };
+        if (imagePath) {
+            userData.image = imagePath;
+        }
 
         let response = await new userModel(userData).save();
 
@@ -415,6 +419,7 @@ export const adminSignUp = async (req: Request, res: Response) => {
                 _id: response?._id,
                 email: response?.email,
                 fullName: response?.fullName,
+                image: response?.image,
             };
 
             return res.status(200).json(new apiResponse(200, emailResult, userResponse, {}));

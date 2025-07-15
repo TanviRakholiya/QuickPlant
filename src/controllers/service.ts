@@ -27,7 +27,7 @@ export const getServiceById = async (req: Request, res: Response) => {
 // CREATE a new service with image upload
 export const createService = async (req: Request, res: Response) => {
   try {
-    const imagePath = req.file ? `/uploads/service-images/${req.file.filename}` : null;
+    const imagePath = req.file ? `/Image/uploads/${req.file.filename}` : null;
     const service = new Service({
       ...req.body,
       image: imagePath,
@@ -47,7 +47,7 @@ export const createService = async (req: Request, res: Response) => {
 // UPDATE an existing service with image upload
 export const updateService = async (req: Request, res: Response) => {
   try {
-    const imagePath = req.file ? `/uploads/service-images/${req.file.filename}` : undefined;
+    const imagePath =req.file ? `/Image/uploads/${req.file.filename}` : null;
     const updateData = { ...req.body };
     if (imagePath) updateData.image = imagePath;
     if (req.user && req.user.id) {

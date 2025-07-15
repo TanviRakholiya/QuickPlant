@@ -7,7 +7,7 @@ import { Order } from '../database/models/order';
 // CREATE PRODUCT
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const images = req.files ? (req.files as any[]).map(file => `/uploads/products/${file.filename}`) : [];
+    const images = req.files ? (req.files as any[]).map(file => `/Image/uploads/${file.filename}`) : [];
 
     const product = new Product({
       ...req.body,
@@ -118,7 +118,7 @@ export const getProductById = async (req: Request, res: Response) => {
 export const updateProduct = async (req: Request, res: Response) => {
   try {
     
-    const images = req.files ? (req.files as any[]).map(file => `/uploads/products/${file.filename}`) : undefined;
+    const images = req.files ? (req.files as any[]).map(file => `/Image/uploads/${file.filename}`) : undefined;
 
     const updateData: any = {
       ...req.body,

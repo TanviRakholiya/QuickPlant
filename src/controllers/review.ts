@@ -7,7 +7,7 @@ import { responseMessage } from '../helper';
 export const createReview = async (req: Request, res: Response) => {
   try {
     // Get photo path if uploaded
-    const photo = req.file ? `/uploads/reviews/${req.file.filename}` : undefined;
+    const photo = req.file ? `/Image/uploads/${req.file.filename}` : null;
 
     // Create new review
     const review = new Review({
@@ -93,7 +93,7 @@ export const updateReview = async (req: Request, res: Response) => {
     const updateData: any = { ...req.body };
     
     if (req.file) {
-      updateData.photo = `/uploads/reviews/${req.file.filename}`;
+      updateData.photo =  `/Image/uploads/${req.file.filename}` ;
     }
 
     // Add updatedBy if authenticated

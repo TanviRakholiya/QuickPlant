@@ -6,12 +6,12 @@ import {
   deleteBlog
 } from '../controllers/blog';
 import { authenticate } from '../middleware/authenticate';
-import { blogUpload } from '../middleware/uploadFile';
+import uploadImage from '../middleware/uploadImage';
 
 const blogRouter = Router();
 
 // Create a new blog (with image upload, authentication required)
-blogRouter.post('/', authenticate, blogUpload.single('image'), createBlog);
+blogRouter.post('/', authenticate, uploadImage.single('image'), createBlog);
 
 // Get all blogs (with pagination, search, etc.)
 blogRouter.get('/', getAllBlogs);

@@ -9,7 +9,7 @@ export const UploadPlantImage = async (req: Request, res: Response) => {
     if (!req.file) {
       return res.status(400).json(new apiResponse(400, 'Image is required', {}, {}));
     }
-    const imagePath = `/uploads/plant-collection/${req.file.filename}`;
+    const imagePath = `/Image/uploads/${req.file.filename}`;
     const userId = req.user && (req.user._id || req.user.id);
     const plant = new PlantCollection({
       image: imagePath,

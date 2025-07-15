@@ -9,6 +9,7 @@ import reviewRouter from './review.route';
 import plantCollectionRouter from './plantCollection.route';
 import faqRouter from './faq.route';
 import blogRouter from './blog.route';
+import uploadRoutes from "./upload.route";
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use('/reviews', reviewRouter);
 router.use('/plantcollection', plantCollectionRouter);
 router.use('/faq', faqRouter);
 router.use('/blog',blogRouter)
+router.use("/upload", uploadRoutes);
 
 export { router };

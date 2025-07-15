@@ -18,11 +18,12 @@ dotenv.config();
 const app: Application = express();
 
     
-app.use('/uploads/image/auth', express.static(path.join(__dirname, 'Public/Image/auth')));
-app.use('/uploads/image/plant-category', express.static(path.join(__dirname, 'Public/Image/plant-category')));
-app.use('/uploads/image/product', express.static(path.join(__dirname, 'Public/Image/product')));
-app.use('/uploads/image/service', express.static(path.join(__dirname, 'Public/Image/service')));
-app.use('/uploads/image/feature-icon', express.static(path.join(__dirname, 'Public/Image/feature-icon')));
+// app.use('/uploads/image/auth', express.static(path.join(__dirname, 'Public/Image/auth')));
+// app.use('/uploads/image/plant-category', express.static(path.join(__dirname, 'Public/Image/plant-category')));
+// app.use('/uploads/image/product', express.static(path.join(__dirname, 'Public/Image/product')));
+// app.use('/uploads/image/service', express.static(path.join(__dirname, 'Public/Image/service')));
+// app.use('/uploads/image/feature-icon', express.static(path.join(__dirname, 'Public/Image/feature-icon')));
+app.use('/Image/uploads', express.static(path.join(__dirname, 'Public/Image/uploads')));
 
 // Initialize server setup
 const init = async () => {
