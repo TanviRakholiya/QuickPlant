@@ -6,26 +6,36 @@ import { responseMessage } from '../helper';
 // CREATE REVIEW
 export const createReview = async (req: Request, res: Response) => {
   try {
-    // Get photo path if uploaded
-    const photo = req.file ? `/Image/uploads/${req.file.filename}` : null;
+    const {
+      name,
+      email,
+      productOrService,
+      rating,
+      reviewText,
+      image // coming from body, not file
+    } = req.body;
 
-    // Create new review
     const review = new Review({
-      name: req.body.name,
-      email: req.body.email,
-      productOrService: req.body.productOrService,
-      rating: req.body.rating,
-      reviewText: req.body.reviewText,
-      photo,
-      createdBy: req.user?._id, // If authenticated
-      userType: req.user?.userType // Attach userType from JWT
+      name,
+      email,
+      productOrService,
+      rating,
+      reviewText,
+      image: typeof image === "string" ? image : "",
+      createdBy: req.user?._id,
+      userType: req.user?.userType
     });
 
     await review.save();
 
-    return res.status(201).json(new apiResponse(201, 'Review submitted successfully', { data: review }, {}));
-  } catch (error: any) {       
-    return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
+    return res.status(201).json(
+      new apiResponse(201, "Review submitted successfully", { data: review }, {})
+    );
+  } catch (error: any) {
+    console.error("Create Review Error:", error);
+    return res
+      .status(500)
+      .json(new apiResponse(500, responseMessage.internalServerError, {}, error));
   }
 };
 
@@ -89,30 +99,31 @@ export const getReviewById = async (req: Request, res: Response) => {
 // UPDATE REVIEW
 export const updateReview = async (req: Request, res: Response) => {
   try {
-    // Get photo path if uploaded
-    const updateData: any = { ...req.body };
-    
-    if (req.file) {
-      updateData.photo =  `/Image/uploads/${req.file.filename}` ;
-    }
+    const { id } = req.params;
 
-    // Add updatedBy if authenticated
-    if (req.user?._id) {
-      updateData.updatedBy = req.user._id;
+    const updateData: any = {
+      ...req.body,
+      updatedBy: req.user?._id
+    };
+
+    // If `photo` is a valid string, assign it
+    if (typeof req.body.image === "string" && req.body.image.trim() !== "") {
+      updateData.image = req.body.image;
     }
 
     const review = await Review.findOneAndUpdate(
-      { _id: req.params.id, isDeleted: false },
+      { _id: id, isDeleted: false },
       updateData,
       { new: true }
     );
 
     if (!review) {
-      return res.status(404).json(new apiResponse(404, 'Review not found', {}, {}));
+      return res.status(404).json(new apiResponse(404, "Review not found", {}, {}));
     }
 
-    return res.status(200).json(new apiResponse(200, 'Review updated successfully', { data: review }, {}));
+    return res.status(200).json(new apiResponse(200, "Review updated successfully", { data: review }, {}));
   } catch (error: any) {
+    console.error("Update Review Error:", error);
     return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
   }
 };

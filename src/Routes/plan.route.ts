@@ -8,7 +8,6 @@ import {
   deactivatePlan,
   deletePlan
 } from '../controllers/plan';
-import { deleteFeature } from '../controllers';
 import { validate } from '../middleware/validate';
 import { planValidation } from '../helper/validation';
 

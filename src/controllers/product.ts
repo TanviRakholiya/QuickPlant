@@ -7,24 +7,44 @@ import { Order } from '../database/models/order';
 // CREATE PRODUCT
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const images = req.files ? (req.files as any[]).map(file => `/Image/uploads/${file.filename}`) : [];
+    const images = Array.isArray(req.body.images)
+      ? req.body.images
+      : typeof req.body.images === "string"
+        ? JSON.parse(req.body.images)
+        : [];
+
+    const sizes = typeof req.body.sizes === "string"
+      ? JSON.parse(req.body.sizes)
+      : req.body.sizes || [];
+
+    const highlights = typeof req.body.highlights === "string"
+      ? JSON.parse(req.body.highlights)
+      : req.body.highlights || [];
+
+    const features = typeof req.body.features === "string"
+      ? JSON.parse(req.body.features)
+      : req.body.features || [];
 
     const product = new Product({
       ...req.body,
       images,
-      sizes: req.body.sizes ? JSON.parse(req.body.sizes) : [],
-      highlights: req.body.highlights ? JSON.parse(req.body.highlights) : [],
-      features: req.body.features ? JSON.parse(req.body.features) : [],
-      uploadedBy: req.user && req.user.id ? req.user.id : undefined,
-      createdBy: req.user && req.user.id ? req.user.id : undefined,
-      updatedBy: req.user && req.user.id ? req.user.id : undefined
+      sizes,
+      highlights,
+      features,
+      uploadedBy: req.user?.id,
+      createdBy: req.user?.id,
+      updatedBy: req.user?.id,
     });
 
     await product.save();
 
-    return res.status(201).json(new apiResponse(201, 'Product created successfully', { data: product }, {}));
+    return res.status(201).json(
+      new apiResponse(201, "Product created successfully", { data: product }, {})
+    );
   } catch (error: any) {
-    return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
+    return res.status(500).json(
+      new apiResponse(500, responseMessage.internalServerError, {}, error)
+    );
   }
 };
 
@@ -117,19 +137,33 @@ export const getProductById = async (req: Request, res: Response) => {
 // UPDATE PRODUCT
 export const updateProduct = async (req: Request, res: Response) => {
   try {
-    
-    const images = req.files ? (req.files as any[]).map(file => `/Image/uploads/${file.filename}`) : undefined;
+    const images = Array.isArray(req.body.images)
+      ? req.body.images
+      : typeof req.body.images === "string"
+        ? JSON.parse(req.body.images)
+        : undefined;
+
+    const sizes = typeof req.body.sizes === "string"
+      ? JSON.parse(req.body.sizes)
+      : req.body.sizes;
+
+    const highlights = typeof req.body.highlights === "string"
+      ? JSON.parse(req.body.highlights)
+      : req.body.highlights;
+
+    const features = typeof req.body.features === "string"
+      ? JSON.parse(req.body.features)
+      : req.body.features;
 
     const updateData: any = {
       ...req.body,
-      sizes: req.body.sizes ? JSON.parse(req.body.sizes) : undefined,
-      highlights: req.body.highlights ? JSON.parse(req.body.highlights) : undefined,
-      features: req.body.features ? JSON.parse(req.body.features) : undefined
+      images,
+      sizes,
+      highlights,
+      features,
     };
 
-    if (images && images.length > 0) updateData.images = images;
-
-    if (req.user && req.user.id) {
+    if (req.user?.id) {
       updateData.updatedBy = req.user.id;
     }
 
@@ -140,14 +174,19 @@ export const updateProduct = async (req: Request, res: Response) => {
     );
 
     if (!product) {
-      return res.status(404).json(new apiResponse(404, 'Product not found', {}, {}));
+      return res.status(404).json(new apiResponse(404, "Product not found", {}, {}));
     }
 
-    return res.status(200).json(new apiResponse(200, 'Product updated successfully', { data: product }, {}));
+    return res.status(200).json(
+      new apiResponse(200, "Product updated successfully", { data: product }, {})
+    );
   } catch (error: any) {
-    return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
+    return res.status(500).json(
+      new apiResponse(500, responseMessage.internalServerError, {}, error)
+    );
   }
 };
+
 
 // DELETE PRODUCT (Soft Delete)
 export const deleteProduct = async (req: Request, res: Response) => {

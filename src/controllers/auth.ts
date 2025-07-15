@@ -150,22 +150,23 @@ export const register = async (req: Request, res: Response) => {
         .json(new apiResponse(403, "OTP verification required", {}, {}));
     }
 
-    // ✅ Extract uploaded image from req.file
-    const uploadedPhoto = req.file ? `/Image/uploads/${req.file.filename}` : null;
+    // ✅ Use image URL from req.body.image (uploaded separately)
+    const uploadedPhoto = typeof req.body.image === "string" ? req.body.image : null;
+    console.log("Uploaded photo URL:", uploadedPhoto);
 
     // ✅ Hash the password
     const hashedPassword = await bcryptjs.hash(req.body.password, 10);
 
-    // ✅ Build update data (exclude image for now)
+    // ✅ Build update data
     const updateData: any = {
       ...req.body,
       password: hashedPassword,
       createdBy: existingUser._id,
       updatedBy: existingUser._id,
-      isVerified: true
+      isVerified: true,
     };
 
-    // ❌ Prevent accidental object overwrite on image field
+    // ❌ Remove image from body (we’re controlling it via uploadedPhoto)
     delete updateData.image;
 
     // ✅ Handle typeofPlant for SELLER only
@@ -198,22 +199,19 @@ export const register = async (req: Request, res: Response) => {
       delete updateData.workCategory;
     }
 
-    // ✅ Add image only if uploaded
-    if (uploadedPhoto && typeof uploadedPhoto === "string") {
+    // ✅ Attach uploaded image URL
+    if (uploadedPhoto) {
       updateData.image = uploadedPhoto;
     }
-    console.log("uploadedPhoto:", uploadedPhoto); // Must print filename
-    console.log("updateData:", updateData); // Must include 'image' field
 
-    // ✅ Apply updates and save
+    // ✅ Save updated user
     existingUser.set(updateData);
     await existingUser.save();
 
-    // ✅ Issue new token
+    // ✅ Generate token
     const payload = { id: existingUser._id, userType };
     const finalToken = jwt.sign(payload, secretKey);
 
-    // ✅ Clean up user object before sending
     const userObj = existingUser.toObject();
     if (userObj.userType !== "SELLER") {
       delete userObj.typeofPlant;

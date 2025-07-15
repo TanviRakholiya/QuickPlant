@@ -12,13 +12,12 @@ import {
   adminLogin
 } from '../controllers/auth';
 import { authenticate } from '../middleware/authenticate';
-import upload from '../middleware/uploadImage';
 
 const authrouter = Router();
 
 authrouter.post('/sent-otp', validate(authValidation.otpSent), otpSent);
 authrouter.post('/otp-verification', validate(authValidation.otpVerification), otp_verification);
-authrouter.post('/register', authenticate, upload.single('image'), validate(authValidation.register), register);
+authrouter.post('/register', authenticate,validate(authValidation.register), register);
 authrouter.post('/login', validate(authValidation.login), login);
 authrouter.post('/forgot-password', validate(authValidation.forgotPassword), forgot_password);
 authrouter.post('/reset-password', validate(authValidation.resetPassword), reset_password);
@@ -26,4 +25,4 @@ authrouter.post('/admin/signup', validate(authValidation.adminSignUp), adminSign
 authrouter.post('/admin/login', validate(authValidation.adminLogin), adminLogin);
 
 
-export default authrouter;
+export default authrouter; 

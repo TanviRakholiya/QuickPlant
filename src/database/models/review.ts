@@ -19,7 +19,7 @@ const reviewSchema = new mongoose.Schema({
     min: 1,
     max: 5
   },
-  photo: { 
+  image: { 
     type: String 
   },
   reviewText: { 

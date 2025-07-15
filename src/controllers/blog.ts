@@ -6,7 +6,7 @@ import { responseMessage } from '../helper';
 // CREATE BLOG
 export const createBlog = async (req: Request, res: Response) => {
   try {
-    const image = req.file ? `/Image/uploads/${req.file.filename}` : '';
+    const image = typeof req.body.image === "string" ? req.body.image : "";
 
     const blog = new blogModel({
       ...req.body,
@@ -17,11 +17,16 @@ export const createBlog = async (req: Request, res: Response) => {
 
     await blog.save();
 
-    return res.status(201).json(new apiResponse(201, 'Blog created successfully', { data: blog }, {}));
+    return res
+      .status(201)
+      .json(new apiResponse(201, "Blog created successfully", { data: blog }, {}));
   } catch (error: any) {
-    return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
+    return res
+      .status(500)
+      .json(new apiResponse(500, responseMessage.internalServerError, {}, error));
   }
 };
+
 
 // GET ALL BLOGS (See All Blogs Page)
 export const getAllBlogs = async (req: Request, res: Response) => {

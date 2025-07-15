@@ -8,4 +8,4 @@ export * from './review'
 export * from './faq'
 export * from './plantCollection'
 export * from './service'
-     
+export * from'./blog'

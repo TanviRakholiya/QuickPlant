@@ -7,29 +7,27 @@ import { error } from 'console';
 // CREATE
 export const createCategory = async (req: Request, res: Response) => {
   try {
-    const { type, name } = req.body;
+    const { type, name, image } = req.body;
 
     const newCategoryData: any = {
       type,
       name,
+      image: typeof image === "string" ? image : "",
       createdBy: req.user?.id,
       updatedBy: req.user?.id
     };
-
-    // ✅ Only add `image` if file exists
-    if (req.file) {
-      newCategoryData.image = `/Image/uploads/${req.file.filename}`;
-    }
 
     const newCategory = new categoriesModel(newCategoryData);
     await newCategory.save();
 
     return res.status(201).json(
-      new apiResponse(201, 'Category created', { data: newCategory }, {})
+      new apiResponse(201, "Category created", { data: newCategory }, {})
     );
   } catch (err) {
-    console.error(err);
-    return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, err));
+    console.error("Create Category Error:", err);
+    return res
+      .status(500)
+      .json(new apiResponse(500, responseMessage?.internalServerError, {}, err));
   }
 };
 
@@ -71,34 +69,40 @@ export const getCategoryById = async (req: Request, res: Response) => {
 // UPDATE
 export const updateCategory = async (req: Request, res: Response) => {
   try {
-    const { name, type } = req.body;
-    const imagePath = req.file ? `/Image/uploads/${req.file.filename}` : undefined;
+    const { id, name, type, image } = req.body;
 
     const updatedData: any = {};
     if (name) updatedData.name = name;
     if (type) updatedData.type = type;
-    if (imagePath) updatedData.image = imagePath;
-
-    if (req.user && req.user.id) {
+    if (typeof image === "string" && image.trim() !== "") {
+      updatedData.image = image;
+    }
+    if (req.user?.id) {
       updatedData.updatedBy = req.user.id;
     }
 
     const updated = await categoriesModel.findOneAndUpdate(
-      { _id: req.body.id, isDeleted: false },
+      { _id: id, isDeleted: false },
       updatedData,
       { new: true }
     );
 
     if (!updated) {
-      return res.status(404).json(new apiResponse(404, 'Category not found or already deleted', {}, {}));
+      return res
+        .status(404)
+        .json(new apiResponse(404, "Category not found or already deleted", {}, {}));
     }
 
-    res.status(200).json(new apiResponse(200, 'Category updated', { data: updated }, {}));
+    return res
+      .status(200)
+      .json(new apiResponse(200, "Category updated", { data: updated }, {}));
   } catch (err) {
-    res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, err));
+    console.error("Update Category Error:", err);
+    return res
+      .status(500)
+      .json(new apiResponse(500, responseMessage?.internalServerError, {}, err));
   }
 };
-
 // DELETE (Soft Delete)
 export const deleteCategory = async (req: Request, res: Response) => {
   try {
