@@ -10,17 +10,17 @@ import {
   adminFeatureProduct,
   getFeaturedProducts
 } from '../controllers/product';
-import uploadImage from '../middleware/uploadImage';
+import upload from '../middleware/uploadImage';
 import { validate } from '../middleware/validate';
 import { productValidation } from '../helper/validation';
 import { rolewise } from '../middleware/rolewise';
 
 const productRouter = express.Router();
 
-productRouter.post('/', authenticate, validate(productValidation.productCreate), uploadImage.array('images', 5), createProduct); // up to 5 images
+productRouter.post('/', authenticate, validate(productValidation.productCreate), upload.array('images', 5), createProduct); // up to 5 images
 productRouter.get('/all',authenticate,rolewise(["CUSTOMER","SELLER"]), getAllProducts); // POST for body data
 productRouter.get('/id', getProductById); // expects { id: "..." } in body
-productRouter.put('/', authenticate, validate(productValidation.productUpdate), uploadImage.array('images', 5), updateProduct);
+productRouter.put('/', authenticate, validate(productValidation.productUpdate), upload.array('images', 5), updateProduct);
 productRouter.delete('/', authenticate, validate(productValidation.productDelete), deleteProduct);
 productRouter.get('/bestsellers', bestsellerProducts);
 productRouter.put('/:id/feature', authenticate, validate(productValidation.productFeature), adminFeatureProduct);

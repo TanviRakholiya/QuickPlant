@@ -7,16 +7,16 @@ import {
   updateService,
   deleteService
 } from '../controllers/service';
-import uploadImage from '../middleware/uploadImage';
+import upload from '../middleware/uploadImage';
 import { validate } from '../middleware/validate';
 import { serviceValidation } from '../helper/validation';
 
 const serviceRouter = express.Router();
 
-serviceRouter.post('/', authenticate, validate(serviceValidation.create), uploadImage.single('image'), createService);
+serviceRouter.post('/', authenticate, validate(serviceValidation.create), upload.single('image'), createService);
 serviceRouter.get('/', getAllServices);
 serviceRouter.get('/id', getServiceById);
-serviceRouter.put('/', authenticate, validate(serviceValidation.update), uploadImage.single('image'), updateService);
+serviceRouter.put('/', authenticate, validate(serviceValidation.update), upload.single('image'), updateService);
 serviceRouter.delete('/', authenticate, validate(serviceValidation.delete), deleteService);
 
 export default serviceRouter; 
