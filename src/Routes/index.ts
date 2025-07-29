@@ -10,6 +10,10 @@ import plantCollectionRouter from './plantCollection.route';
 import faqRouter from './faq.route';
 import blogRouter from './blog.route';
 import uploadRoutes from "./upload.route";
+import contactRouter from './contact.route';
+import cartRouter from './cart.route';
+import addressRouter from './address.route';
+import orderRouter from './order.route';
 
 const router = Router();
 
@@ -24,5 +28,9 @@ router.use('/plantcollection', plantCollectionRouter);
 router.use('/faq', faqRouter);
 router.use('/blog',blogRouter)
 router.use("/upload", uploadRoutes);
+router.use('/contact',contactRouter);
+router.use('/cart', cartRouter);
+router.use('/address', addressRouter);
+router.use('/orders', orderRouter);
 
 export { router };

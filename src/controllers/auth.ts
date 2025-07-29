@@ -150,9 +150,16 @@ export const register = async (req: Request, res: Response) => {
         .json(new apiResponse(403, "OTP verification required", {}, {}));
     }
 
-    // ✅ Use image URL from req.body.image (uploaded separately)
-    const uploadedPhoto = typeof req.body.image === "string" ? req.body.image : null;
-    console.log("Uploaded photo URL:", uploadedPhoto);
+    // ✅ Only accept image URL for SELLER or GARDENER
+    let uploadedPhoto: string | null = null;
+    if (
+      existingUser.userType === "SELLER" ||
+      existingUser.userType === "GARDENER"
+    ) {
+      uploadedPhoto =
+        typeof req.body.image === "string" ? req.body.image : null;
+      console.log("Uploaded photo URL:", uploadedPhoto);
+    }
 
     // ✅ Hash the password
     const hashedPassword = await bcryptjs.hash(req.body.password, 10);
@@ -166,7 +173,7 @@ export const register = async (req: Request, res: Response) => {
       isVerified: true,
     };
 
-    // ❌ Remove image from body (we’re controlling it via uploadedPhoto)
+    // ❌ Remove image from body (we’ll only set if allowed)
     delete updateData.image;
 
     // ✅ Handle typeofPlant for SELLER only
@@ -199,7 +206,7 @@ export const register = async (req: Request, res: Response) => {
       delete updateData.workCategory;
     }
 
-    // ✅ Attach uploaded image URL
+    // ✅ Set uploaded image URL only for SELLER/GARDENER
     if (uploadedPhoto) {
       updateData.image = uploadedPhoto;
     }
@@ -220,7 +227,7 @@ export const register = async (req: Request, res: Response) => {
     return res.status(200).json(
       new apiResponse(
         200,
-        responseMessage?.registerSuccess,
+        responseMessage?.registerSuccess || "Registration successful",
         { token: finalToken, user: userObj },
         {}
       )
@@ -232,7 +239,6 @@ export const register = async (req: Request, res: Response) => {
     );
   }
 };
-
 
 export const login = async (req: Request, res: Response) => {
     try {
