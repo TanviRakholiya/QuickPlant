@@ -54,7 +54,7 @@ export const addToCart = async (req: Request, res: Response) => {
     await cart.save();
 
     // Populate product details
-    await cart.populate('items.productId');
+    await cart.populate({path:'items.productId',select:'name description images price originalPrice discountPercent'});
 
     return res.status(200).json(new apiResponse(200, 'Item added to cart successfully', { cart }, {}));
   } catch (error) {
@@ -92,7 +92,7 @@ export const getCart = async (req: Request, res: Response) => {
 // Update cart item
 export const updateCartItem = async (req: Request, res: Response) => {
   try {
-    const { productId, quantity, selectedSize, isSelected } = req.body;
+    const { productId, quantity, selectedSize } = req.body;
     const userId = req.user?.id;
 
     if (!productId) {
@@ -125,10 +125,7 @@ export const updateCartItem = async (req: Request, res: Response) => {
       cart.items[itemIndex].selectedSize = selectedSize;
     }
 
-    if (isSelected !== undefined) {
-      cart.items[itemIndex].isSelected = isSelected;
-    }
-
+   
     cart.updatedBy = userId;
     await cart.save();
 
@@ -138,7 +135,7 @@ export const updateCartItem = async (req: Request, res: Response) => {
     return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
   }
 };
-
+    
 // Remove item from cart
 export const removeFromCart = async (req: Request, res: Response) => {
   try {

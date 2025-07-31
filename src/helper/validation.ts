@@ -49,8 +49,6 @@ export const authValidation = {
     }),
 
     resetPassword: Joi.object({
-        email: Joi.string().email().required(),
-        otp: Joi.number().integer().min(100000).max(999999).required(),
         password: Joi.string()
             .min(8)
             .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)

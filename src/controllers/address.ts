@@ -62,7 +62,7 @@ export const createAddress = async (req: Request, res: Response) => {
 
 // Get all addresses for user
 export const getAddresses = async (req: Request, res: Response) => {
-  try {
+  try { 
     const userId = req.user?.id;
 
     const addresses = await Address.find({ userId }).sort({ isDefault: -1, createdAt: -1 });

@@ -34,4 +34,4 @@ router.delete('/clear', clearCart);
 // router.get('/checkout', getCheckoutDetails);
 // router.post('/place-order', validate(cartValidation.placeOrder), placeOrder);
 
-export default router; 
+export default router;

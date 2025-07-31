@@ -5,6 +5,7 @@ import { Request, Response } from 'express'
 import { userModel } from '../database'
 import { apiResponse } from '../common'
 import {
+          sendResetPasswordMail,
     email_verification_mail,
     otp_verification_sms, // Commented out Twilio SMS
     responseMessage,
@@ -74,7 +75,7 @@ export const otpSent = async (req: Request, res: Response) => {
         if (mobileNo) {
             // result = await sendSMS('91', mobileNo, otp.toString(), fullName);
         } else if (email) {
-            result = await email_verification_mail({ email, fullName }, otp);
+            // result = await email_verification_mail({ email, fullName }, otp);
         }
 
         // if (!result) {
@@ -271,82 +272,80 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const forgot_password = async (req: Request, res: Response) => {
-    try {
-        const { email } = req.body;
+  try {
+    const { email } = req.body;
 
-        if (!email) {
-            return res.status(400).json(new apiResponse(400, "Email is required", {}, {}));
-        }
-
-        let user = await userModel.findOne({ email, isActive: true });
-
-        if (!user) {
-            return res.status(400).json(new apiResponse(400, responseMessage?.invalidEmail, {}, {}));
-        }
-
-        if (user.isBlock === true) {
-            return res.status(403).json(new apiResponse(403, responseMessage?.accountBlock, {}, {}));
-        }
-
-        // Generate consistent 6-digit OTP
-        const otp = Math.floor(100000 + Math.random() * 900000);
-        const otpExpireTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
-
-        // Send password reset email
-        try {
-            const emailResult = await email_verification_mail({ email: user.email, fullName: user.fullName }, otp);
-
-            // Update user with OTP
-            await userModel.findOneAndUpdate(
-                { _id: user._id },
-                { otp, otpExpireTime }
-            );
-
-            return res.status(200).json(new apiResponse(200, emailResult, {}, {}));
-        } catch (emailError) {
-            console.error('Password reset email failed:', emailError);
-            return res.status(501).json(new apiResponse(501, responseMessage?.errorMail, {}, {}));
-        }
-    } catch (error) {
-        console.error('Forgot password error:', error);
-        return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, error));
+    if (!email) {
+      return res.status(400).json(new apiResponse(400, "Email is required", {}, {}));
     }
+
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json(new apiResponse(404, responseMessage.invalidEmail, {}, {}));
+    }
+
+    // ✅ Generate one-time reset token (valid 15 mins) - includes password hash
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, hash: user.password },
+      jwt_token_secret,
+      { expiresIn: "15m" }
+    );
+
+    // ✅ Reset link (change domain as needed)
+    const resetLink = `http://localhost:5000/api/auth/reset-password?token=${token}`; // frontend URL
+    console.log(resetLink)
+
+    // ✅ Send email
+    await sendResetPasswordMail({
+      email: user.email,
+      fullName: user.fullName,
+      resetLink: resetLink,
+    });
+
+    return res.status(200).json(
+      new apiResponse(200, "Password reset link sent successfully", { resetLink }, {})
+    );
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    return res
+      .status(500)
+      .json(new apiResponse(500, responseMessage.internalServerError, {}, error));
+  }
 };
-
-
+ 
 export const reset_password = async (req: Request, res: Response) => {
     try {
-        const { email, otp, password } = req.body;
+        const token = req.query.token;
+const { password } = req.body;
 
-        // Step 1: Find user with matching email, otp, and active status
-        let user = await userModel.findOne({ email, isActive: true });
-        if (!user) {
-            return res.status(400).json(new apiResponse(400, responseMessage?.invalidOTP || "Invalid OTP or user not found", {}, {}));
-        }
-        // Developer override: allow 123456 as valid OTP
-        const isDevOtp = otp === 123456;
-        if (!isDevOtp && user.otp !== otp) {
-            return res.status(400).json(new apiResponse(400, responseMessage?.invalidOTP || "Invalid OTP or user not found", {}, {}));
-        }
-        // Step 2: Check if OTP is expired
-            if (!isDevOtp && new Date(user.otpExpireTime).getTime() < Date.now()) {
-            return res.status(410).json(new apiResponse(410, responseMessage?.expireOTP || "OTP has expired", {}, {}));
-        }
+if (!token) {
+  return res.status(400).json(new apiResponse(400, "Token is required", {}, {}));
+}
 
-        // Step 3: Hash new password
-        const salt = await bcryptjs.genSalt(10);
-        const hashedPassword = await bcryptjs.hash(password, salt);
+let decoded;
+try {
+  decoded = jwt.verify(token, jwt_token_secret);
+} catch (err) {
+  return res.status(401).json(new apiResponse(401, "Invalid or expired token", {}, err));
+}
 
-        // Step 4: Update user fields
-        user.password = hashedPassword;
-        user.otp = null;
-        user.otpExpireTime = null;
-        user.isEmailVerified = true;
-        user.isLoggedIn = true;
+// Fetch user
+const user = await userModel.findById(decoded.userId);
+if (!user) {
+  return res.status(404).json(new apiResponse(404, "User not found", {}, {}));
+}
 
-        const updatedUser = await user.save();
+// ✅ Check if token is still valid by comparing hashes
+if (user.password !== decoded.hash) {
+  return res.status(401).json(new apiResponse(401, "Token already used or password already changed", {}, {}));
+}
 
-        return res.status(200).json(new apiResponse(200, responseMessage?.resetPasswordSuccess || "Password reset successful", updatedUser, {}));
+// ✅ Update password
+const salt = await bcryptjs.genSalt(10);
+user.password = await bcryptjs.hash(password, salt);
+await user.save();
+
+return res.status(200).json(new apiResponse(200, "Password reset successful", {}, {}));
     } catch (error) {
         console.error("Reset password error:", error);
         return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError || "Internal server error", {}, error));
@@ -354,134 +353,134 @@ export const reset_password = async (req: Request, res: Response) => {
 };
 
 
-export const adminSignUp = async (req: Request, res: Response) => {
-    try {
-        const { fullName, email, mobileNo, password } = req.body;
+// export const adminSignUp = async (req: Request, res: Response) => {
+//     try {
+//         const { fullName, email, mobileNo, password } = req.body;
 
-        // Validate required fields
-        if (!fullName || !email || !mobileNo || !password) {
-            return res.status(400).json(new apiResponse(400, "Missing required fields", {}, {}));
-        }
+//         // Validate required fields
+//         if (!fullName || !email || !mobileNo || !password) {
+//             return res.status(400).json(new apiResponse(400, "Missing required fields", {}, {}));
+//         }
 
-        // Check if user already exists
-        let isAlready = await userModel.findOne({ email, isActive: true });
-        if (isAlready) {
-            return res.status(409).json(new apiResponse(409, responseMessage?.alreadyEmail, {}, {}));
-        }
+//         // Check if user already exists
+//         let isAlready = await userModel.findOne({ email, isActive: true });
+//         if (isAlready) {
+//             return res.status(409).json(new apiResponse(409, responseMessage?.alreadyEmail, {}, {}));
+//         }
 
-        isAlready = await userModel.findOne({ mobileNo, isActive: true });
-        if (isAlready) {
-            return res.status(409).json(new apiResponse(409, "Mobile number already exists", {}, {}));
-        }
+//         isAlready = await userModel.findOne({ mobileNo, isActive: true });
+//         if (isAlready) {
+//             return res.status(409).json(new apiResponse(409, "Mobile number already exists", {}, {}));
+//         }
 
-        if (isAlready?.isBlock === true) {
-            return res.status(403).json(new apiResponse(403, responseMessage?.accountBlock, {}, {}));
-        }
+//         if (isAlready?.isBlock === true) {
+//             return res.status(403).json(new apiResponse(403, responseMessage?.accountBlock, {}, {}));
+//         }
 
-        // Hash password
-        const salt = await bcryptjs.genSalt(10);
-        const hashPassword = await bcryptjs.hash(password, salt);
+//         // Hash password
+//         const salt = await bcryptjs.genSalt(10);
+//         const hashPassword = await bcryptjs.hash(password, salt);
 
-        // Handle uploaded image
-        let imagePath = null;
-        if (req.file && req.file.filename) {
-            imagePath = `/Image/uploads/${req.file.filename}`;
-        }
+//         // Handle uploaded image
+//         let imagePath = null;
+//         if (req.file && req.file.filename) {
+//             imagePath = `/Image/uploads/${req.file.filename}`;
+//         }
 
-        // Create user
-        const userData: any = {
-            fullName,
-            email,
-            mobileNo,
-            password: hashPassword,
-            userType: "ADMIN",
-            isActive: true
-        };
-        if (imagePath) {
-            userData.image = imagePath;
-        }
+//         // Create user
+//         const userData: any = {
+//             fullName,
+//             email,
+//             mobileNo,
+//             password: hashPassword,
+//             userType: "ADMIN",
+//             isActive: true
+//         };
+//         if (imagePath) {
+//             userData.image = imagePath;
+//         }
 
-        let response = await new userModel(userData).save();
+//         let response = await new userModel(userData).save();
 
-        // Generate OTP for email verification
-        const otp = Math.floor(100000 + Math.random() * 900000);
-        const otpExpireTime = new Date(Date.now() + 10 * 60 * 1000);
+//         // Generate OTP for email verification
+//         const otp = Math.floor(100000 + Math.random() * 900000);
+//         const otpExpireTime = new Date(Date.now() + 10 * 60 * 1000);
 
-        // Send verification email
-        try {
-            const emailResult = await email_verification_mail({ email: response.email, fullName: response.fullName }, otp);
+//         // Send verification email
+//         try {
+//             const emailResult = await email_verification_mail({ email: response.email, fullName: response.fullName }, otp);
 
-            // Update user with OTP
-            await userModel.findOneAndUpdate(
-                { _id: response._id },
-                { otp, otpExpireTime }
-            );
+//             // Update user with OTP
+//             await userModel.findOneAndUpdate(
+//                 { _id: response._id },
+//                 { otp, otpExpireTime }
+//             );
 
-            const userResponse = {
-                userType: response?.userType,
-                isEmailVerified: response?.isEmailVerified,
-                _id: response?._id,
-                email: response?.email,
-                fullName: response?.fullName,
-                image: response?.image,
-            };
+//             const userResponse = {
+//                 userType: response?.userType,
+//                 isEmailVerified: response?.isEmailVerified,
+//                 _id: response?._id,
+//                 email: response?.email,
+//                 fullName: response?.fullName,
+//                 image: response?.image,
+//             };
 
-            return res.status(200).json(new apiResponse(200, emailResult, userResponse, {}));
-        } catch (emailError) {
-            console.error('Admin signup email failed:', emailError);
-            return res.status(501).json(new apiResponse(501, responseMessage?.errorMail, {}, {}));
-        }
-    } catch (error) {
-        console.error('Admin signup error:', error);
-        return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, error));
-    }
-};
+//             return res.status(200).json(new apiResponse(200, emailResult, userResponse, {}));
+//         } catch (emailError) {
+//             console.error('Admin signup email failed:', emailError);
+//             return res.status(501).json(new apiResponse(501, responseMessage?.errorMail, {}, {}));
+//         }
+//     } catch (error) {
+//         console.error('Admin signup error:', error);
+//         return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, error));
+//     }
+// };
 
-export const adminLogin = async (req: Request, res: Response) => {
-    try {
-        const { email, password } = req.body;
+// export const adminLogin = async (req: Request, res: Response) => {
+//     try {
+//         const { email, password } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json(new apiResponse(400, "Email and password are required", {}, {}));
-        }
+//         if (!email || !password) {
+//             return res.status(400).json(new apiResponse(400, "Email and password are required", {}, {}));
+//         }
 
-        const response = await userModel.findOneAndUpdate(
-            { email, isActive: true, isEmailVerified: true },
-            { isLoggedIn: true }
-        ).select('-__v -createdAt -updatedAt');
+//         const response = await userModel.findOneAndUpdate(
+//             { email, isActive: true, isEmailVerified: true },
+//             { isLoggedIn: true }
+//         ).select('-__v -createdAt -updatedAt');
 
-        if (!response) {
-            return res.status(400).json(new apiResponse(400, responseMessage?.invalidUserPasswordEmail, {}, {}));
-        }
+//         if (!response) {
+//             return res.status(400).json(new apiResponse(400, responseMessage?.invalidUserPasswordEmail, {}, {}));
+//         }
 
-        if (response?.isBlock === true) {
-            return res.status(403).json(new apiResponse(403, responseMessage?.accountBlock, {}, {}));
-        }
+//         if (response?.isBlock === true) {
+//             return res.status(403).json(new apiResponse(403, responseMessage?.accountBlock, {}, {}));
+//         }
 
-        const passwordMatch = await bcryptjs.compare(password, response.password);
-        if (!passwordMatch) {
-            return res.status(400).json(new apiResponse(400, responseMessage?.invalidUserPasswordEmail, {}, {}));
-        }
+//         const passwordMatch = await bcryptjs.compare(password, response.password);
+//         if (!passwordMatch) {
+//             return res.status(400).json(new apiResponse(400, responseMessage?.invalidUserPasswordEmail, {}, {}));
+//         }
 
-        const token = jwt.sign({
-            _id: response._id,
-            type: response.userType,
-            status: "Login",
-            generatedOn: (new Date().getTime())
-        }, jwt_token_secret);
+//         const token = jwt.sign({
+//             _id: response._id,
+//             type: response.userType,
+//             status: "Login",
+//             generatedOn: (new Date().getTime())
+//         }, jwt_token_secret);
 
-        const userResponse = {
-            isEmailVerified: response?.isEmailVerified,
-            userType: response?.userType,
-            _id: response?._id,
-            email: response?.email,
-            token,
-        };
+//         const userResponse = {
+//             isEmailVerified: response?.isEmailVerified,
+//             userType: response?.userType,
+//             _id: response?._id,
+//             email: response?.email,
+//             token,
+//         };
 
-        return res.status(200).json(new apiResponse(200, responseMessage?.loginSuccess, userResponse, {}));
-    } catch (error) {
-        console.error('Admin login error:', error);
-        return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, error));
-    }
-};
+//         return res.status(200).json(new apiResponse(200, responseMessage?.loginSuccess, userResponse, {}));
+//     } catch (error) {
+//         console.error('Admin login error:', error);
+//         return res.status(500).json(new apiResponse(500, responseMessage?.internalServerError, {}, error));
+//     }
+// };
 

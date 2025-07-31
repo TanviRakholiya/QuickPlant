@@ -8,8 +8,8 @@ import {
   login,  
   forgot_password,
   reset_password,
-  adminSignUp,
-  adminLogin
+  // adminSignUp,
+  // adminLogin
 } from '../controllers/auth';
 import { authenticate } from '../middleware/authenticate';
 
@@ -21,8 +21,8 @@ authrouter.post('/register', authenticate,validate(authValidation.register), reg
 authrouter.post('/login', validate(authValidation.login), login);
 authrouter.post('/forgot-password', validate(authValidation.forgotPassword), forgot_password);
 authrouter.post('/reset-password', validate(authValidation.resetPassword), reset_password);
-authrouter.post('/admin/signup', validate(authValidation.adminSignUp), adminSignUp);
-authrouter.post('/admin/login', validate(authValidation.adminLogin), adminLogin);
+// authrouter.post('/admin/signup', validate(authValidation.adminSignUp), adminSignUp);
+// authrouter.post('/admin/login', validate(authValidation.adminLogin), adminLogin);
 
 
 export default authrouter; 

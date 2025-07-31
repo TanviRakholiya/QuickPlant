@@ -14,6 +14,6 @@ export default router;
 
 router.post(
   "/images",
-  upload.array("image", 5), // Accept up to 10 images
+  upload.array("image",10), // Accept up to 10 images
   upload_multiple_images
 );

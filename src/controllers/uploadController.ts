@@ -15,9 +15,9 @@ export const upload_image = async (req: Request, res: Response) => {
       "blog"
     ];
 
-    const file = req.file;
+    const file = req.file; // will work because we used upload.single("image")
+    const files = req.files as Express.Multer.File[];
     const subfolder = req.query.subfolder as string;
-
 
     if (!subfolder || !allowedSubfolders.includes(subfolder)) {
       return res
@@ -25,10 +25,16 @@ export const upload_image = async (req: Request, res: Response) => {
         .json(new apiResponse(400, "Invalid or missing subfolder", {}, {}));
     }
 
+    if (Array.isArray(files) && files.length > 1) {
+      return res
+        .status(400)
+        .json(new apiResponse(400, "Only one image file is allowed.", {}, {}));
+    }
+
     if (!file) {
       return res
         .status(400)
-        .json(new apiResponse(400, "No file uploaded. Please try again.", {}, {}));
+        .json(new apiResponse(400, "No image uploaded. Please try again.", {}, {}));
     }
 
     const imageUrl = `/Image/${subfolder}/${file.filename}`;
@@ -43,6 +49,7 @@ export const upload_image = async (req: Request, res: Response) => {
       .json(new apiResponse(500, responseMessage?.internalServerError, {}, error));
   }
 };
+
 
 
 export const upload_multiple_images = async (req: Request, res: Response) => {

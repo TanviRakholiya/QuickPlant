@@ -12,17 +12,13 @@ import cors from 'cors';
 import { router } from './Routes';
 import { mongooseConnection } from './database/connection';
 import dotenv from 'dotenv';
+import multer from "multer";
+import { apiResponse } from './common';
 
 dotenv.config();
 
 const app: Application = express();
 
-    
-// app.use('/uploads/image/auth', express.static(path.join(__dirname, 'Public/Image/auth')));
-// app.use('/uploads/image/plant-category', express.static(path.join(__dirname, 'Public/Image/plant-category')));
-// app.use('/uploads/image/product', express.static(path.join(__dirname, 'Public/Image/product')));
-// app.use('/uploads/image/service', express.static(path.join(__dirname, 'Public/Image/service')));
-// app.use('/uploads/image/feature-icon', express.static(path.join(__dirname, 'Public/Image/feature-icon')));
 app.use('/Image/uploads', express.static(path.join(__dirname, 'Public/Image/uploads')));
 
 // Initialize server setup
@@ -38,11 +34,35 @@ app.set('views', path.join(__dirname, 'views'));
     app.use(bodyParser.urlencoded({ extended: true, limit: '200mb' }));
 
     app.use('/api', router);
-    // app.use('*', bad_gateway);
+
+    app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_UNEXPECTED_FILE") {
+      return res.status(400).json(
+        new apiResponse(400, "Only one image is allowed.", {}, {})
+      );
+    }
+
+    if (err.code === "LIMIT_FILE_COUNT") {
+      return res.status(400).json(
+        new apiResponse(400, "Too many files uploaded. Maximum is 5.", {}, err)
+      );
+    }
+
+    return res.status(400).json(
+      new apiResponse(400, "Multer error: " + err.message, {}, err)
+    );
+  }
+
+  return res.status(500).json(
+    new apiResponse(500, "Internal server error", {}, err)
+  );
+});
+    
 };
 
 init(); // Start initialization
 
-// Export server instance
+
 const server = http.createServer(app);
 export default server;
