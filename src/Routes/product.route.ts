@@ -18,7 +18,7 @@ import { rolewise } from '../middleware/rolewise';
 const productRouter = express.Router();
 
 productRouter.post('/', authenticate, validate(productValidation.productCreate), createProduct); // up to 5 images
-productRouter.get('/all',authenticate,rolewise(["CUSTOMER","SELLER"]), getAllProducts); // POST for body data
+productRouter.get('/all', getAllProducts); // POST for body data
 productRouter.get('/id', getProductById); // expects { id: "..." } in body
 productRouter.put('/', authenticate, validate(productValidation.productUpdate), updateProduct);
 productRouter.delete('/', authenticate, validate(productValidation.productDelete), deleteProduct);

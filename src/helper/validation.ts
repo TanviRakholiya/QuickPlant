@@ -5,19 +5,19 @@ export const authValidation = {
         fullName: Joi.string()
             .min(3)
             .max(50)
-             .regex(/^[a-zA-Z .]+$/)
+            .regex(/^[a-zA-Z .]+$/)
             .required()
             .messages({
                 'string.regex.base': 'Full name must contain only letters and spaces'
             }),
         email: Joi.string().email().optional(),
         mobileNo: Joi.string().pattern(/^[0-9]{10}$/).optional(),
-        userType: Joi.string().valid("CUSTOMER","SELLER","GARDENER").required()
+        userType: Joi.string().valid("CUSTOMER", "SELLER", "GARDENER").required()
     }).or('email', 'mobileNo'),
 
     otpVerification: Joi.object({
         otp: Joi.number().integer().min(100000).max(999999).required()
-    })  ,
+    }),
 
     register: Joi.object({
         password: Joi.string()
@@ -45,11 +45,13 @@ export const authValidation = {
     }).or('email', 'mobileNo'),
 
     forgotPassword: Joi.object({
-        email: Joi.string().email().required()
+        email: Joi.string().email().optional(),
+        mobileNo: Joi.string().pattern(/^[0-9]{10}$/).optional(),
+
     }),
 
     resetPassword: Joi.object({
-        password: Joi.string()
+        newPassword: Joi.string()
             .min(8)
             .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
             .required()
@@ -57,10 +59,10 @@ export const authValidation = {
                 'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number and one special character',
                 'string.min': 'Password must be at least 8 characters long'
             }),
-        confirmPassword: Joi.string().valid(Joi.ref('password')).required()
-            .messages({
-                'any.only': 'Passwords do not match'
-            })
+        // confirmPassword: Joi.string().valid(Joi.ref('password')).required()
+        //     .messages({
+        //         'any.only': 'Passwords do not match'
+        //     })
     }),
 
     adminSignUp: Joi.object({
