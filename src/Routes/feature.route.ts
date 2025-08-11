@@ -11,7 +11,7 @@ import { featureValidation } from '../helper/validation';
 
 const featurerouter = express.Router();
 
-featurerouter.get('/', getFeatures);
+featurerouter.get('/all', getFeatures);
 featurerouter.post('/', authenticate, validate(featureValidation.create),  createFeature);
 featurerouter.put('/', authenticate, validate(featureValidation.update),  updateFeature);
 featurerouter.delete('/', authenticate, validate(featureValidation.delete), deleteFeature);

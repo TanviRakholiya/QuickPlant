@@ -33,14 +33,15 @@ export const getFeatures = async (req: Request, res: Response) => {
   try {
     let features: any;
 
-    if (['ABOUT', 'CUSTOMERPAGE', 'SELLERPAGE', 'GARDENERPAGE'].includes(req.body.page)) {
-      features = await Feature.find({ isDeleted: false, page: req.body.page });
+    if (['ABOUTPAGE', 'CUSTOMERPAGE', 'SELLERPAGE', 'GARDENERPAGE'].includes(req.query.page)) {
+      features = await Feature.find({ isDeleted: false, page: req.query.page });
     } else {
       features = await Feature.find({ isDeleted: false });
     }
 
-    res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('feature'), { data: features }, {}));
+    res.status(200).json(new apiResponse(200, responseMessage.getDataSuccess('feature'),  features , {}));
   } catch (error) {
+    console.log(error)
     res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
   }
 };
