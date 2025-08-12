@@ -3,31 +3,36 @@ import { categoriesModel } from '../database/models/category';
 import { apiResponse } from '../common';
 import { responseMessage } from '../helper';
 import { error } from 'console';
+import { url } from 'inspector';
 
 // CREATE
-export const createCategory = async (req: Request, res: Response) => {
+export const createCategory = async (req, res) => {
   try {
-    const { type, name, image } = req.body;
+    const { name, type, image, url } = req.body;
 
-    const newCategoryData: any = {
-      type,
+    
+
+    // Create the category
+    const newCategory = await categoriesModel.create({
       name,
-      image: typeof image === "string" ? image : "",
-      createdBy: req.user?.id,
-      updatedBy: req.user?.id
-    };
+      type,
+      image,
+      url
+    });
 
-    const newCategory = new categoriesModel(newCategoryData);
-    await newCategory.save();
+    res.status(201).json({
+      success: true,
+      message: "Category created successfully",
+      data: newCategory
+    });
 
-    return res.status(201).json(
-      new apiResponse(201, "Category created", { data: newCategory }, {})
-    );
-  } catch (err) {
-    console.error("Create Category Error:", err);
-    return res
-      .status(500)
-      .json(new apiResponse(500, responseMessage?.internalServerError, {}, err));
+  } catch (error) {
+    console.error("Error creating category:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message
+    });
   }
 };
 

@@ -140,11 +140,13 @@ export const categoryValidation = {
     create: Joi.object({
         type: Joi.string().required(),
         name: Joi.string().required(),
+        url:Joi.string().optional()
     }),
     update: Joi.object({
         id: Joi.string().hex().length(24).required(),
         type: Joi.string().optional(),
         name: Joi.string().optional(),
+        url: Joi.string().optional()
     }),
     delete: Joi.object({
         id: Joi.string().hex().length(24).required()
