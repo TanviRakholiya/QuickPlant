@@ -21,6 +21,7 @@ export const createFeature = async (req: Request, res: Response) => {
       new apiResponse(201, "Feature created successfully", { data: feature }, {})
     );
   } catch (error) {
+    
     console.error("Feature save error:", error);
     return res
       .status(500)

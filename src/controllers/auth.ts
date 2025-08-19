@@ -73,15 +73,15 @@ export const otpSent = async (req: Request, res: Response) => {
     const token = jwt.sign(payload, secretKey, { expiresIn: "10m" });
 
     let result;
-    // if (mobileNo) {
-    //   // result = await sendSMS('91', mobileNo, otp.toString(), fullName);
-    // } else if (email) {
-    //   // result = await email_verification_mail({ email, fullName }, otp);
-    // }
+    if (mobileNo) {
+      // result = await sendSMS('91', mobileNo, otp.toString(), fullName);
+    } else if (email) {
+      result = await email_verification_mail({ email, fullName }, otp);
+    }
 
-    // if (!result) {
-    //     return res.status(501).json(new apiResponse(501, responseMessage.errorMail, {}, `${result}`));
-    // }
+    if (!result) {
+        return res.status(501).json(new apiResponse(501, responseMessage.errorMail, {}, `${result}`));
+    }
 
     return res.status(200).json(new apiResponse(200, responseMessage?.otpSentSuccessfully, { token }, {}));
   } catch (error) {
@@ -262,10 +262,7 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const isMatch = await bcryptjs.compare(password, user.password);
-    console.log("Password Match:", isMatch);
-    console.log("Entered password:", password);
-    console.log("DB hash:", user.password);
-
+    
     if (!isMatch) {
       return res.status(401).json(new apiResponse(401, responseMessage?.invalidpassword, {}, {}));
     }

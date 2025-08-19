@@ -2,7 +2,6 @@
 export * from './category'
 export * from './auth'
 export * from './feature'
-export * from './product'
 export * from './plan'
 export * from './review'
 export * from './faq'

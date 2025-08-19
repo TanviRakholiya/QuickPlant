@@ -2,13 +2,11 @@ import { Request, Response } from 'express';
 import { categoriesModel } from '../database/models/category';
 import { apiResponse } from '../common';
 import { responseMessage } from '../helper';
-import { error } from 'console';
-import { url } from 'inspector';
 
 // CREATE
 export const createCategory = async (req, res) => {
   try {
-    const { name, type, image, url } = req.body;
+    const { name, type, image } = req.body;
 
     
 
@@ -16,8 +14,7 @@ export const createCategory = async (req, res) => {
     const newCategory = await categoriesModel.create({
       name,
       type,
-      image,
-      url
+      image
     });
 
     res.status(201).json({

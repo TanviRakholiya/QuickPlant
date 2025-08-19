@@ -15,10 +15,10 @@ export const addToCart = async (req: Request, res: Response) => {
     }
 
     // Validate product exists
-    const product = await Product.findById(productId);
-    if (!product || product.isDeleted) {
-      return res.status(404).json(new apiResponse(404, 'Product not found', {}, {}));
-    }
+    // const product = await Product.findById(productId);
+    // if (!product || product.isDeleted) {
+    //   return res.status(404).json(new apiResponse(404, 'Product not found', {}, {}));
+    // }
 
     // Get or create cart
     let cart = await Cart.findOne({ userId });

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Address } from '../database/models';
+import { Address, userModel } from '../database';
 import { apiResponse } from '../common';
 import { responseMessage } from '../helper';
 
@@ -194,4 +194,48 @@ export const setDefaultAddress = async (req: Request, res: Response) => {
     console.error('Set default address error:', error);
     return res.status(500).json(new apiResponse(500, responseMessage.internalServerError, {}, error));
   }
-}; 
+};
+
+export const addAddress = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user.id; // Make sure you have authentication middleware
+    const {
+      name,
+      mobileNo,
+      pinCode,
+      address,
+      locality,
+      city,
+      state,
+      addressType,
+      isDefault
+    } = req.body;
+
+    if (!name || !mobileNo || !pinCode || !address || !locality || !city || !state || !addressType) {
+      return res.status(400).json(new apiResponse(400, "All fields are required", {}, {}));
+    }
+
+    const addressObj = {
+      name,
+      mobileNo,
+      pinCode,
+      address,
+      locality,
+      city,
+      state,
+      addressType,
+      isDefault: !!isDefault
+    };
+
+    // Push address to user's addresses array
+    const user = await userModel.findByIdAndUpdate(
+      userId,
+      { $push: { addresses: addressObj } },
+      { new: true }
+    );
+
+    return res.status(200).json(new apiResponse(200, "Address added successfully", { addresses: user.addresses }, {}));
+  } catch (error) {
+    return res.status(500).json(new apiResponse(500, "Internal server error", {}, error));
+  }
+};

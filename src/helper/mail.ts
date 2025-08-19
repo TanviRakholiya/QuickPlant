@@ -112,37 +112,6 @@ export const otp_verification_sms = async (
   }
 };
 
-// export const sendResetPasswordMail = async ({
-//   email,
-//   fullName,
-//   resetLink,
-// }: {
-//   email: string;
-//   fullName: string;
-//   resetLink: string;
-// }) => {
-//   try {
-//     const mailOptions = {
-//       from: `Quick Plant <${SMTP_USER}>`,
-//       to: email,
-//       subject: 'Reset Your Password - Quick Plant',
-//       html: `
-//         <div style="font-family:Arial,sans-serif;line-height:1.5;color:#333">
-//           <h2>Hello, ${fullName}</h2>
-//           <p>You recently requested to reset your password for your Quick Plant account.</p>
-//           <p>Click the button below to reset it:</p>
-//           <a href="${resetLink}" style="display:inline-block;padding:10px 20px;background:#28a745;color:#fff;text-decoration:none;border-radius:5px;">Reset Password</a>
-//           <p>If you did not request a password reset, please ignore this email.</p>
-//         </div>
-//       `,
-//     };
-
-//     await smtpTransporter.sendMail(mailOptions);
-//   } catch (error: any) {
-//     console.error('SMTP Email send error:', error);
-//     throw new Error('Failed to send reset password email');
-//   }
-// };
 
 export const sendEmailResetOtp = async (
   response: { email: string; fullName?: string },
@@ -150,13 +119,15 @@ export const sendEmailResetOtp = async (
 ): Promise<string> => {
   try {
     if (!response.email || response.email.trim() === "") {
+      console.error("No recipient email provided in:", response);
+
       throw new Error("Recipient email is missing");
     }
 
     if (!SMTP_USER || !SMTP_PASSWORD) {
       throw new Error("SMTP credentials not configured");
     }
-
+    console.log(response.email)
     const mailOptions = {
       from: `"Quick Plant" <${SMTP_USER}>`,
       to: response.email,
